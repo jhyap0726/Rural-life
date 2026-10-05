@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>乡村生活 3D - 旗舰完整版</title>
+<title>乡村生活 3D - 拟真生存与自由烹饪版</title>
 
-<!-- Three.js 核心及后处理组件 -->
+<!-- Three.js 核心及高级后处理组件 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
@@ -26,8 +26,8 @@ html,body{
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#050b14;
-    font-family:Arial,"Microsoft YaHei",sans-serif;
+    background:#020617;
+    font-family:system-ui, -apple-system, sans-serif;
 }
 
 #game{
@@ -35,30 +35,28 @@ html,body{
     inset:0;
 }
 
-canvas{
-    display:block;
-}
+canvas{ display:block; }
 
-/* ================= 登录/注册 模态框 UI ================= */
+/* ================= 登录/注册 模态框 ================= */
 
 .auth-modal{
     position:fixed;
     inset:0;
     z-index:999;
-    background:rgba(5,10,15,.85);
-    backdrop-filter:blur(12px);
+    background:rgba(2, 6, 23, 0.88);
+    backdrop-filter:blur(16px);
     display:flex;
     align-items:center;
     justify-content:center;
 }
 
 .auth-box{
-    width:350px;
+    width:360px;
     padding:32px 28px;
-    background:rgba(20,32,25,.92);
-    border-radius:20px;
-    border:1px solid rgba(255,255,255,.18);
-    box-shadow:0 20px 50px rgba(0,0,0,.6);
+    background:rgba(15, 23, 42, 0.95);
+    border-radius:24px;
+    border:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.7);
     color:white;
     text-align:center;
 }
@@ -67,73 +65,76 @@ canvas{
     font-size:24px;
     font-weight:bold;
     margin-bottom:20px;
-    color:#a8e6cf;
+    color:#38bdf8;
+    letter-spacing:1px;
 }
 
 .auth-input{
     width:100%;
-    padding:12px 15px;
+    padding:12px 16px;
     margin-bottom:12px;
-    border-radius:10px;
-    border:1px solid rgba(255,255,255,.2);
-    background:rgba(255,255,255,.08);
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.05);
     color:white;
     font-size:14px;
     outline:none;
+    transition:border-color 0.2s;
 }
 
-.auth-input::placeholder{ color:#aaa; }
+.auth-input:focus{ border-color:#38bdf8; }
+.auth-input::placeholder{ color:#64748b; }
 
 .auth-btn{
     width:100%;
     padding:12px;
     margin-top:8px;
     border:none;
-    border-radius:10px;
-    background:#4caf50;
+    border-radius:12px;
+    background:#0284c7;
     color:white;
     font-size:15px;
     font-weight:bold;
     cursor:pointer;
-    transition:.2s;
+    transition:background 0.2s;
 }
 
-.auth-btn:hover{ background:#52be56; }
+.auth-btn:hover{ background:#0369a1; }
 
 .auth-switch{
-    margin-top:15px;
+    margin-top:16px;
     font-size:12px;
-    color:#a1cfa1;
+    color:#38bdf8;
     cursor:pointer;
     text-decoration:underline;
 }
 
 .auth-error{
-    color:#ff6b6b;
+    color:#f87171;
     font-size:12px;
     margin-bottom:10px;
     min-height:16px;
 }
 
-/* ================= 主界面 UI ================= */
+/* ================= 游戏面板 UI ================= */
 
 #ui{
     position:fixed;
-    top:15px;
-    left:15px;
+    top:16px;
+    left:16px;
     z-index:20;
     color:white;
     user-select:none;
 }
 
 .panel{
-    min-width:240px;
-    padding:16px;
-    border-radius:16px;
-    background:rgba(12,22,15,.75);
-    backdrop-filter:blur(12px);
-    border:1px solid rgba(255,255,255,.15);
-    box-shadow:0 10px 30px rgba(0,0,0,.4);
+    width:280px;
+    padding:18px;
+    border-radius:20px;
+    background:rgba(15, 23, 42, 0.82);
+    backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,0.15);
+    box-shadow:0 12px 32px rgba(0,0,0,0.5);
 }
 
 .user-info{
@@ -141,82 +142,175 @@ canvas{
     justify-content:space-between;
     align-items:center;
     padding-bottom:10px;
-    margin-bottom:10px;
-    border-bottom:1px solid rgba(255,255,255,.15);
+    margin-bottom:12px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
     font-size:13px;
-    color:#a1cfa1;
+    color:#38bdf8;
 }
 
 .logout-btn{
-    background:rgba(255,100,100,.25);
-    border:1px solid rgba(255,100,100,.4);
-    color:#ff9999;
+    background:rgba(239,68,68,0.2);
+    border:1px solid rgba(239,68,68,0.4);
+    color:#fca5a5;
     padding:4px 10px;
-    border-radius:6px;
+    border-radius:8px;
     cursor:pointer;
     font-size:11px;
 }
 
-.logout-btn:hover{ background:rgba(255,100,100,.45); }
+.logout-btn:hover{ background:rgba(239,68,68,0.4); }
 
-.title{ font-size:18px; font-weight:bold; margin-bottom:8px; }
-
-.stat{ font-size:13px; margin:4px 0; }
+.stat-group{ margin-bottom:10px; }
+.stat-label{ font-size:12px; display:flex; justify-content:space-between; margin-bottom:4px; color:#cbd5e1; }
 
 .bar{
     width:100%;
     height:8px;
-    background:#333;
+    background:rgba(255,255,255,0.1);
     border-radius:20px;
     overflow:hidden;
-    margin:4px 0 8px;
 }
 
-#staminaBar{
-    height:100%;
-    width:100%;
-    background:#71c96c;
-    transition:.2s;
+.bar-fill{ height:100%; transition:width 0.3s ease; }
+#staminaBar{ background:#22c55e; }
+#hungerBar{ background:#f59e0b; }
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+    font-size:12px;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    color:#e2e8f0;
 }
 
-/* 工具快捷栏 UI */
+/* 工具栏 */
 .tool-bar{
     display:flex;
     gap:6px;
-    margin-top:10px;
-    padding-top:8px;
-    border-top:1px solid rgba(255,255,255,.1);
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px solid rgba(255,255,255,0.1);
 }
 
 .tool-slot{
     flex:1;
-    padding:6px;
+    padding:6px 2px;
     text-align:center;
-    background:rgba(255,255,255,.1);
-    border:1px solid transparent;
-    border-radius:8px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:10px;
     font-size:11px;
     cursor:pointer;
+    color:#94a3b8;
+    transition:all 0.2s;
 }
 
 .tool-slot.active{
-    border-color:#71c96c;
-    background:rgba(113,201,108,.25);
+    border-color:#38bdf8;
+    background:rgba(56,189,248,0.2);
+    color:#white;
     font-weight:bold;
 }
 
+/* ================= 自由烹饪烹饪界面 ================= */
+
+#cookingModal{
+    position:fixed;
+    inset:0;
+    z-index:900;
+    background:rgba(2, 6, 23, 0.85);
+    backdrop-filter:blur(12px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+}
+
+.cook-box{
+    width:460px;
+    padding:24px;
+    background:rgba(15, 23, 42, 0.95);
+    border-radius:24px;
+    border:1px solid rgba(255,255,255,0.15);
+    box-shadow:0 25px 50px rgba(0,0,0,0.6);
+    color:white;
+}
+
+.cook-title{ font-size:20px; font-weight:bold; text-align:center; margin-bottom:16px; color:#f59e0b; }
+
+.cook-pot{
+    width:100%;
+    min-height:80px;
+    background:rgba(0,0,0,0.4);
+    border:2px dashed rgba(245,158,11,0.5);
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+}
+
+.ingredient-tag{
+    background:rgba(245,158,11,0.2);
+    border:1px solid #f59e0b;
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:12px;
+    cursor:pointer;
+}
+
+.ingredients-inventory{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:8px;
+    margin-bottom:16px;
+}
+
+.ing-btn{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    padding:8px;
+    border-radius:12px;
+    color:white;
+    font-size:12px;
+    cursor:pointer;
+    text-align:center;
+}
+
+.ing-btn:hover{ background:rgba(255,255,255,0.15); }
+
+.cook-actions{ display:flex; gap:10px; }
+
+.cook-btn{
+    flex:1;
+    padding:10px;
+    border:none;
+    border-radius:12px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#startCookBtn{ background:#f59e0b; color:black; }
+#closeCookBtn{ background:rgba(255,255,255,0.1); color:white; }
+
 #help{
     position:fixed;
-    right:15px;
-    top:15px;
+    right:16px;
+    top:16px;
     z-index:20;
     color:white;
-    padding:12px 16px;
-    border-radius:14px;
-    background:rgba(12,22,15,.75);
-    backdrop-filter:blur(10px);
+    padding:14px 18px;
+    border-radius:16px;
+    background:rgba(15, 23, 42, 0.8);
+    backdrop-filter:blur(12px);
     font-size:12px;
     line-height:1.8;
+    border:1px solid rgba(255,255,255,0.1);
 }
 
 #message{
@@ -228,7 +322,8 @@ canvas{
     padding:10px 24px;
     border-radius:30px;
     color:white;
-    background:rgba(0,0,0,.8);
+    background:rgba(15, 23, 42, 0.9);
+    border:1px solid rgba(255,255,255,0.2);
     opacity:0;
     pointer-events:none;
     transition:.25s;
@@ -249,10 +344,11 @@ canvas{
     height:60px;
     border:none;
     border-radius:50%;
-    background:rgba(20,30,20,.85);
+    background:rgba(15, 23, 42, 0.85);
+    border:1px solid rgba(255,255,255,0.2);
     color:white;
     font-size:12px;
-    box-shadow:0 5px 18px rgba(0,0,0,.4);
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
     cursor:pointer;
 }
 
@@ -267,34 +363,59 @@ canvas{
 <!-- 登录/注册 弹窗 -->
 <div id="authModal" class="auth-modal">
     <div class="auth-box">
-        <div id="authTitle" class="auth-title">🌾 乡村生活 3D</div>
+        <div id="authTitle" class="auth-title">🏞️ 乡村生存 3D</div>
         <div id="authError" class="auth-error"></div>
         <input type="text" id="usernameInput" class="auth-input" placeholder="用户名 (至少3位)" maxlength="16">
         <input type="password" id="passwordInput" class="auth-input" placeholder="密码 (至少6位)" maxlength="20">
-        <button id="authBtn" class="auth-btn">登录游戏</button>
+        <button id="authBtn" class="auth-btn">进入乡村</button>
         <div id="authSwitch" class="auth-switch">还没有账号？点击注册</div>
     </div>
 </div>
 
-<!-- 界面 UI -->
+<!-- 自由烹饪 UI -->
+<div id="cookingModal">
+    <div class="cook-box">
+        <div class="cook-title">🍳 烹饪灶台 (自由组合食材)</div>
+        <div class="cook-pot" id="cookPot">
+            <span style="color:#64748b; font-size:12px;" id="potEmptyHint">点击下方食材加入烹饪锅中...</span>
+        </div>
+        <div class="ingredients-inventory" id="ingInventory"></div>
+        <div class="cook-actions">
+            <button class="cook-btn" id="startCookBtn">🔥 开始下锅</button>
+            <button class="cook-btn" id="closeCookBtn">离开灶台</button>
+        </div>
+    </div>
+</div>
+
+<!-- 主界面 UI -->
 <div id="ui">
     <div class="panel">
         <div class="user-info">
             <span>👤 <span id="currentUser">-</span></span>
-            <button id="logoutBtn" class="logout-btn">🚪 退出</button>
+            <button id="logoutBtn" class="logout-btn">🚪 保存退出</button>
         </div>
 
-        <div class="title">🏡 个人庄园</div>
+        <div class="stat-group">
+            <div class="stat-label"><span>⚡ 体力</span><span id="staminaVal">100/100</span></div>
+            <div class="bar"><div class="bar-fill" id="staminaBar"></div></div>
+        </div>
 
-        <div class="stat">💰 金币：<span id="gold">500</span></div>
-        <div class="stat">⚡ 体力：<span id="stamina">100</span></div>
-        <div class="bar"><div id="staminaBar"></div></div>
-        <div class="stat">🌾 小麦：<span id="wheat">0</span></div>
-        <div class="stat">🪵 木材：<span id="wood">0</span></div>
-        <div class="stat">🐟 鲜鱼：<span id="fish">0</span></div>
-        <div class="stat">🕐 时间：<span id="time">08:00</span></div>
+        <div class="stat-group">
+            <div class="stat-label"><span>🍖 饱腹度</span><span id="hungerVal">100/100</span></div>
+            <div class="bar"><div class="bar-fill" id="hungerBar"></div></div>
+        </div>
 
-        <!-- 工具栏 -->
+        <div class="stats-grid">
+            <div>💰 金币：<span id="gold">500</span></div>
+            <div>🌤️ 天气：<span id="weatherText">晴朗</span></div>
+            <div>🕐 时间：<span id="time">08:00</span></div>
+            <div>🪵 木材：<span id="wood">0</span></div>
+            <div>🌾 小麦：<span id="wheat">0</span></div>
+            <div>🥕 胡萝卜：<span id="carrot">0</span></div>
+            <div>🐟 鲜鱼：<span id="fish">0</span></div>
+            <div>🥩 兽肉：<span id="meat">0</span></div>
+        </div>
+
         <div class="tool-bar">
             <div class="tool-slot active" id="tool1">1:空手</div>
             <div class="tool-slot" id="tool2">2:斧头</div>
@@ -305,140 +426,76 @@ canvas{
 </div>
 
 <div id="help">
-    <b>🎮 操作说明</b><br>
-    WASD：移动角色<br>
-    按住鼠标左键拖拽：旋转 3D 视角<br>
-    按键 1 - 4：切换手持装备<br>
-    E / 点击互动按钮：使用装备/交互<br>
-    F：手动保存数据
+    <b>🎮 拟真乡村生活</b><br>
+    WASD：移动 | 按住鼠标左键：旋转视角<br>
+    数字键 1 - 4：切换工具<br>
+    E：使用工具 / 交互<br>
+    靠近木屋灶台：开启<b>自由烹饪系统</b><br>
+    ⚠️ 饱腹度归零时会迅速消耗体力！
 </div>
 
 <div id="message"></div>
 
 <div id="actions">
-    <button class="action" id="interactBtn">✋<br>互动/使用</button>
-    <button class="action" id="saveBtn">💾<br>保存</button>
+    <button class="action" id="interactBtn">✋<br>交互/使用</button>
+    <button class="action" id="saveBtn">💾<br>存档</button>
 </div>
 
 <script>
 
 /* =========================================================
-   1. 音频管理器 (Web Audio API 纯算法音效 & BGM)
+   1. 音频系统 (纯算法 AudioContext 合成音效与BGM)
 ========================================================= */
 
-class SoundManager {
-    constructor() {
-        this.ctx = null;
-        this.bgmOsc = null;
-        this.isBGMPlaying = false;
-    }
+class SoundEngine {
+    constructor() { this.ctx = null; }
 
     init() {
-        if (!this.ctx) {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    playFootstep() {
+    playTone(freq, type, duration, gainVal = 0.1) {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.1);
+        osc.stop(this.ctx.currentTime + duration);
     }
 
-    playChop() {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.15);
-    }
-
-    playActionSound() {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.2);
-    }
-
-    startBGM() {
-        if (this.isBGMPlaying || !this.ctx) return;
-        this.isBGMPlaying = true;
-        const notes = [261.63, 329.63, 392.00, 523.25]; // C E G C
-        let step = 0;
-        
-        setInterval(() => {
-            if (!this.isBGMPlaying) return;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(notes[step % notes.length], this.ctx.currentTime);
-            gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.8);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start();
-            osc.stop(this.ctx.currentTime + 1.8);
-            step++;
-        }, 2000);
-    }
+    playFootstep() { this.playTone(100, 'triangle', 0.08, 0.05); }
+    playChop() { this.playTone(160, 'square', 0.12, 0.2); }
+    playSizzle() { this.playTone(600, 'sawtooth', 0.4, 0.1); }
+    playWater() { this.playTone(300, 'sine', 0.25, 0.15); }
 }
 
-const audio = new SoundManager();
+const audio = new SoundEngine();
 
 /* =========================================================
-   2. 多账号持久化存储与 Auth 逻辑
+   2. 多账号独立存档与数据管理
 ========================================================= */
 
 let currentUser = null;
 let isAuthModeLogin = true;
-let currentTool = "none"; // none, axe, hoe, rod
+let currentTool = "none";
 
 function getUsersDB() {
-    try {
-        return JSON.parse(localStorage.getItem("rural_db_v2")) || {};
-    } catch {
-        return {};
-    }
+    try { return JSON.parse(localStorage.getItem("rural_3d_real_db")) || {}; }
+    catch { return {}; }
 }
 
-function saveUsersDB(db) {
-    localStorage.setItem("rural_db_v2", JSON.stringify(db));
-}
+function saveUsersDB(db) { localStorage.setItem("rural_3d_real_db", JSON.stringify(db)); }
 
 function createDefaultSaveData() {
     return {
-        gold: 500,
-        stamina: 100,
-        wheat: 0,
-        wood: 0,
-        fish: 0,
-        x: 0,
-        z: 10,
-        gameTime: 8
+        gold: 500, stamina: 100, hunger: 100,
+        wheat: 2, carrot: 2, fish: 1, meat: 1, wood: 5,
+        x: 0, z: 12, gameTime: 8
     };
 }
 
@@ -451,57 +508,41 @@ const usernameInput = document.getElementById("usernameInput");
 const passwordInput = document.getElementById("passwordInput");
 const authBtn = document.getElementById("authBtn");
 const authSwitch = document.getElementById("authSwitch");
-const logoutBtn = document.getElementById("logoutBtn");
 
 authSwitch.onclick = () => {
     isAuthModeLogin = !isAuthModeLogin;
     authError.textContent = "";
     if (isAuthModeLogin) {
-        authTitle.textContent = "🌾 乡村生活 3D - 登录";
-        authBtn.textContent = "登录游戏";
+        authTitle.textContent = "🏞️ 乡村生存 3D - 登录";
+        authBtn.textContent = "进入乡村";
         authSwitch.textContent = "还没有账号？点击注册";
     } else {
-        authTitle.textContent = "📝 创建新账号";
-        authBtn.textContent = "注册并自动登录";
+        authTitle.textContent = "📝 注册新角色";
+        authBtn.textContent = "创建并自动登录";
         authSwitch.textContent = "已有账号？点击登录";
     }
 };
 
 authBtn.onclick = () => {
     audio.init();
-    audio.startBGM();
-
     const user = usernameInput.value.trim();
     const pwd = passwordInput.value.trim();
 
-    if (user.length < 3) {
-        authError.textContent = "用户名长度不可少于 3 位！";
-        return;
-    }
-    if (pwd.length < 6) {
-        authError.textContent = "密码长度不可少于 6 位！";
-        return;
-    }
+    if (user.length < 3) { authError.textContent = "用户名长度不可少于 3 位！"; return; }
+    if (pwd.length < 6) { authError.textContent = "密码长度不可少于 6 位！"; return; }
 
     const db = getUsersDB();
 
     if (isAuthModeLogin) {
-        if (!db[user]) {
-            authError.textContent = "账号不存在！";
-            return;
-        }
-        if (db[user].password !== pwd) {
-            authError.textContent = "密码错误！";
+        if (!db[user] || db[user].password !== pwd) {
+            authError.textContent = "用户名或密码错误！";
             return;
         }
         currentUser = user;
         data = db[user].saveData || createDefaultSaveData();
         onLoginSuccess();
     } else {
-        if (db[user]) {
-            authError.textContent = "该用户名已被注册！";
-            return;
-        }
+        if (db[user]) { authError.textContent = "用户名已被使用！"; return; }
         db[user] = { password: pwd, saveData: createDefaultSaveData() };
         saveUsersDB(db);
         currentUser = user;
@@ -513,23 +554,21 @@ authBtn.onclick = () => {
 function onLoginSuccess() {
     authModal.style.display = "none";
     document.getElementById("currentUser").textContent = currentUser;
-    if (player) {
-        player.position.set(data.x, 0, data.z);
-    }
-    localStorage.setItem("rural_session_user", currentUser);
-    showMessage(`欢迎进入庄园，${currentUser}！`);
+    if (player) player.position.set(data.x, 0, data.z);
+    localStorage.setItem("rural_real_session", currentUser);
+    showMessage(`欢迎重返乡村，${currentUser}！`);
     updateUI();
 }
 
-logoutBtn.onclick = () => {
+document.getElementById("logoutBtn").onclick = () => {
     saveGame();
     currentUser = null;
-    localStorage.removeItem("rural_session_user");
+    localStorage.removeItem("rural_real_session");
     authModal.style.display = "flex";
 };
 
 function checkSession() {
-    const sessionUser = localStorage.getItem("rural_session_user");
+    const sessionUser = localStorage.getItem("rural_real_session");
     if (sessionUser) {
         const db = getUsersDB();
         if (db[sessionUser]) {
@@ -551,170 +590,198 @@ function saveGame() {
     if (db[currentUser]) {
         db[currentUser].saveData = data;
         saveUsersDB(db);
-        showMessage("💾 独立游戏存档已导出同步");
+        showMessage("💾 独立世界进度已保存！");
     }
 }
 
 /* =========================================================
-   3. 3D 全景渲染引擎与后处理特效 (Three.js & Post-Processing)
+   3. 高逼真度 3D 渲染与动态天气/雨雪粒子系统
 ========================================================= */
 
 const gameContainer = document.getElementById("game");
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0f172a);
-scene.fog = new THREE.FogExp2(0x0f172a, 0.005);
+scene.background = new THREE.Color(0x020617);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 1.2;
 gameContainer.appendChild(renderer.domElement);
 
-// 后处理（Unreal Bloom 发光）
+// 后处理（泛光发光效果）
 const composer = new THREE.EffectComposer(renderer);
-const renderPass = new THREE.RenderPass(scene, camera);
-composer.addPass(renderPass);
-
-const bloomPass = new THREE.UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.35,  // 发光强度
-    0.4,   // 半径
-    0.85   // 阈值
-);
+composer.addPass(new THREE.RenderPass(scene, camera));
+const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.25, 0.4, 0.85);
 composer.addPass(bloomPass);
 
-// 环境与方向光
-const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.6);
+// 环境光照
+const ambientLight = new THREE.AmbientLight(0x38bdf8, 0.4);
 scene.add(ambientLight);
 
-const sun = new THREE.DirectionalLight(0xfffbeb, 1.2);
-sun.position.set(60, 100, 40);
+const sun = new THREE.DirectionalLight(0xfffbe1, 1.5);
+sun.position.set(80, 120, 50);
 sun.castShadow = true;
 sun.shadow.mapSize.width = 2048;
 sun.shadow.mapSize.height = 2048;
-sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far = 300;
-const d = 80;
-sun.shadow.camera.left = -d;
-sun.shadow.camera.right = d;
-sun.shadow.camera.top = d;
-sun.shadow.camera.bottom = -d;
+const shadowRange = 100;
+sun.shadow.camera.left = -shadowRange;
+sun.shadow.camera.right = shadowRange;
+sun.shadow.camera.top = shadowRange;
+sun.shadow.camera.bottom = -shadowRange;
 scene.add(sun);
 
-// 物理碰撞包围盒（AABB 数组）
-const colliders = [];
-
-// 地面
-const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(250, 250),
-    new THREE.MeshStandardMaterial({ color: 0x3f6212, roughness: 0.9 })
-);
+// 地形材质
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x1e3a1e, roughness: 0.9, metalness: 0.1 });
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), groundMat);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// 3D 树木建造与碰撞添加
-function createTree(x, z) {
-    const group = new THREE.Group();
-    
-    const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.5, 0.7, 4, 8),
-        new THREE.MeshStandardMaterial({ color: 0x451a03 })
-    );
-    trunk.position.y = 2;
-    trunk.castShadow = true;
-    group.add(trunk);
+// 碰撞实体数组
+const colliders = [];
 
-    const leavesMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.5 });
-    const leaves1 = new THREE.Mesh(new THREE.ConeGeometry(3, 4, 7), leavesMat);
-    leaves1.position.y = 4.5;
-    leaves1.castShadow = true;
-    group.add(leaves1);
-
-    const leaves2 = new THREE.Mesh(new THREE.ConeGeometry(2.2, 3, 7), leavesMat);
-    leaves2.position.y = 6.2;
-    leaves2.castShadow = true;
-    group.add(leaves2);
-
-    group.position.set(x, 0, z);
-    scene.add(group);
-
-    // 记录 AABB 碰撞阻挡
-    colliders.push(new THREE.Box3().setFromCenterAndSize(
-        new THREE.Vector3(x, 2, z),
-        new THREE.Vector3(1.2, 4, 1.2)
-    ));
-
-    return group;
-}
-
-const trees = [];
-for (let i = 0; i < 30; i++) {
-    const x = (Math.random() - 0.5) * 180;
-    const z = (Math.random() - 0.5) * 180;
-    if (Math.hypot(x, z) > 18) {
-        trees.push(createTree(x, z));
-    }
-}
-
-// 3D 小木屋建造与碰撞添加
-function createHouse(x, z) {
+// 拟真 3D 木屋建造 (带烹饪烟囱与室内灶台)
+function createDetailHouse(x, z) {
     const house = new THREE.Group();
 
+    // 墙体
     const wall = new THREE.Mesh(
-        new THREE.BoxGeometry(8, 5, 7),
-        new THREE.MeshStandardMaterial({ color: 0x78350f })
+        new THREE.BoxGeometry(10, 6, 8),
+        new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 })
     );
-    wall.position.y = 2.5;
+    wall.position.y = 3;
     wall.castShadow = true;
     wall.receiveShadow = true;
     house.add(wall);
 
+    // 屋顶
     const roof = new THREE.Mesh(
-        new THREE.ConeGeometry(6.5, 3.5, 4),
-        new THREE.MeshStandardMaterial({ color: 0x991b1b })
+        new THREE.ConeGeometry(8, 4, 4),
+        new THREE.MeshStandardMaterial({ color: 0x7f1d1d, roughness: 0.5 })
     );
-    roof.position.y = 6;
+    roof.position.y = 8;
     roof.rotation.y = Math.PI / 4;
     roof.castShadow = true;
     house.add(roof);
+
+    // 烟囱
+    const chimney = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 4, 1.2),
+        new THREE.MeshStandardMaterial({ color: 0x334155 })
+    );
+    chimney.position.set(3, 8, -2);
+    house.add(chimney);
 
     house.position.set(x, 0, z);
     scene.add(house);
 
     colliders.push(new THREE.Box3().setFromCenterAndSize(
-        new THREE.Vector3(x, 2.5, z),
-        new THREE.Vector3(8.2, 5, 7.2)
+        new THREE.Vector3(x, 3, z),
+        new THREE.Vector3(10.2, 6, 8.2)
     ));
 }
-createHouse(15, -15);
+createDetailHouse(20, -20);
 
-// 3D 湖泊 (钓鱼点)
+// 拟真 3D 树木
+function createDetailTree(x, z) {
+    const group = new THREE.Group();
+    const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.8, 5, 8),
+        new THREE.MeshStandardMaterial({ color: 0x291d09, roughness: 0.9 })
+    );
+    trunk.position.y = 2.5;
+    trunk.castShadow = true;
+    group.add(trunk);
+
+    const leavesMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.6 });
+    for (let i = 0; i < 3; i++) {
+        const m = new THREE.Mesh(new THREE.ConeGeometry(3.5 - i * 0.6, 3.5, 8), leavesMat);
+        m.position.y = 4.5 + i * 1.8;
+        m.castShadow = true;
+        group.add(m);
+    }
+
+    group.position.set(x, 0, z);
+    scene.add(group);
+
+    colliders.push(new THREE.Box3().setFromCenterAndSize(
+        new THREE.Vector3(x, 2.5, z),
+        new THREE.Vector3(1.5, 5, 1.5)
+    ));
+    return group;
+}
+
+const trees = [];
+for (let i = 0; i < 35; i++) {
+    const rx = (Math.random() - 0.5) * 200;
+    const rz = (Math.random() - 0.5) * 200;
+    if (Math.hypot(rx, rz) > 20) trees.push(createDetailTree(rx, rz));
+}
+
+// 拟真 3D 湖泊
 const lake = new THREE.Mesh(
-    new THREE.CylinderGeometry(10, 10, 0.2, 24),
-    new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, metalness: 0.8, transparent: true, opacity: 0.85 })
+    new THREE.CylinderGeometry(12, 12, 0.2, 32),
+    new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.85 })
 );
-lake.position.set(-25, 0.05, 20);
+lake.position.set(-30, 0.05, 25);
 scene.add(lake);
 
-/* =========================================================
-   4. 3D 角色与装备/工具切换系统
-========================================================= */
+/* 动态雨雪天气粒子系统 */
+let currentWeather = "晴朗"; // 晴朗, 下雨, 降雪
+const particleCount = 1500;
+const rainGeo = new THREE.BufferGeometry();
+const rainPos = new Float32Array(particleCount * 3);
 
-let toolMesh = null;
+for (let i = 0; i < particleCount * 3; i += 3) {
+    rainPos[i] = (Math.random() - 0.5) * 250;
+    rainPos[i + 1] = Math.random() * 100;
+    rainPos[i + 2] = (Math.random() - 0.5) * 250;
+}
+rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+
+const rainMat = new THREE.PointsMaterial({
+    color: 0x38bdf8,
+    size: 0.4,
+    transparent: true,
+    opacity: 0.6
+});
+const weatherParticles = new THREE.Points(rainGeo, rainMat);
+weatherParticles.visible = false;
+scene.add(weatherParticles);
+
+function updateWeatherSystem(delta) {
+    if (currentWeather === "晴朗") {
+        weatherParticles.visible = false;
+        return;
+    }
+
+    weatherParticles.visible = true;
+    const pos = weatherParticles.geometry.attributes.position.array;
+    const speed = currentWeather === "下雨" ? 60 : 15;
+
+    for (let i = 1; i < particleCount * 3; i += 3) {
+        pos[i] -= speed * delta;
+        if (pos[i] < 0) pos[i] = 80;
+    }
+    weatherParticles.geometry.attributes.position.needsUpdate = true;
+}
+
+/* =========================================================
+   4. 角色与手持装备模型系统
+========================================================= */
 
 function createPlayer() {
     const group = new THREE.Group();
 
-    // 身体
+    // 躯干
     const body = new THREE.Mesh(
         new THREE.BoxGeometry(0.8, 1.2, 0.5),
-        new THREE.MeshStandardMaterial({ color: 0x1e40af })
+        new THREE.MeshStandardMaterial({ color: 0x0284c7 })
     );
     body.position.y = 1.2;
     body.castShadow = true;
@@ -723,15 +790,15 @@ function createPlayer() {
     // 头部
     const head = new THREE.Mesh(
         new THREE.BoxGeometry(0.65, 0.65, 0.65),
-        new THREE.MeshStandardMaterial({ color: 0xfde047 })
+        new THREE.MeshStandardMaterial({ color: 0xffedd5 })
     );
-    head.position.y = 2.1;
+    head.position.y = 2.15;
     head.castShadow = true;
     group.add(head);
 
-    // 右手工具挂载点
+    // 右手挂载点
     const hand = new THREE.Group();
-    hand.position.set(0.55, 1.2, 0.3);
+    hand.position.set(0.55, 1.2, 0.2);
     hand.name = "rightHand";
     group.add(hand);
 
@@ -742,51 +809,150 @@ function createPlayer() {
 const player = createPlayer();
 player.position.set(data.x, 0, data.z);
 
-// 工具切换模型渲染
 function switchTool(type) {
     currentTool = type;
     const hand = player.getObjectByName("rightHand");
-    
-    while(hand.children.length > 0) {
-        hand.remove(hand.children[0]);
-    }
+    while(hand.children.length > 0) hand.remove(hand.children[0]);
 
     document.querySelectorAll(".tool-slot").forEach(s => s.classList.remove("active"));
 
-    if (type === "none") {
-        document.getElementById("tool1").classList.add("active");
-    } else if (type === "axe") {
+    if (type === "none") document.getElementById("tool1").classList.add("active");
+    if (type === "axe") {
         document.getElementById("tool2").classList.add("active");
-        // 创建 3D 斧头模型
-        const axe = new THREE.Group();
-        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.2), new THREE.MeshStandardMaterial({ color: 0x78350f }));
-        handle.rotation.x = Math.PI / 3;
-        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.4), new THREE.MeshStandardMaterial({ color: 0x94a3b8 }));
-        blade.position.set(0, 0.4, 0.2);
-        axe.add(handle); axe.add(blade);
+        const axe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.2, 0.3), new THREE.MeshStandardMaterial({ color: 0x94a3b8 }));
+        axe.rotation.x = Math.PI / 4;
         hand.add(axe);
-    } else if (type === "hoe") {
+    }
+    if (type === "hoe") {
         document.getElementById("tool3").classList.add("active");
-        // 创建 3D 锄头
-        const hoe = new THREE.Group();
-        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.3), new THREE.MeshStandardMaterial({ color: 0x78350f }));
-        handle.rotation.x = Math.PI / 3;
-        const head = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.35), new THREE.MeshStandardMaterial({ color: 0x64748b }));
-        head.position.set(0, 0.45, 0.15);
-        hoe.add(handle); hoe.add(head);
+        const hoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.3, 0.4), new THREE.MeshStandardMaterial({ color: 0x64748b }));
+        hoe.rotation.x = Math.PI / 4;
         hand.add(hoe);
-    } else if (type === "rod") {
+    }
+    if (type === "rod") {
         document.getElementById("tool4").classList.add("active");
-        // 创建 3D 鱼竿
-        const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.05, 2.2), new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
+        const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 2), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
         rod.rotation.x = Math.PI / 4;
         hand.add(rod);
     }
-    audio.playActionSound();
 }
 
 /* =========================================================
-   5. AABB 碰撞检测与角色控制
+   5. 3D 自由烹饪与烹饪公式算法 (FOOD SYSTEM)
+========================================================= */
+
+const cookingModal = document.getElementById("cookingModal");
+const cookPot = document.getElementById("cookPot");
+const ingInventory = document.getElementById("ingInventory");
+const potEmptyHint = document.getElementById("potEmptyHint");
+
+let currentPotItems = [];
+
+function openCookingMenu() {
+    cookingModal.style.display = "flex";
+    currentPotItems = [];
+    renderCookingUI();
+}
+
+function renderCookingUI() {
+    // 渲染锅内食材
+    cookPot.innerHTML = "";
+    if (currentPotItems.length === 0) {
+        cookPot.appendChild(potEmptyHint);
+    } else {
+        currentPotItems.forEach((item, index) => {
+            const tag = document.createElement("div");
+            tag.className = "ingredient-tag";
+            tag.textContent = `${item} ✕`;
+            tag.onclick = () => {
+                data[getRawKey(item)]++;
+                currentPotItems.splice(index, 1);
+                renderCookingUI();
+            };
+            cookPot.appendChild(tag);
+        });
+    }
+
+    // 渲染背包可用食材
+    ingInventory.innerHTML = "";
+    const list = [
+        { name: "小麦", key: "wheat", icon: "🌾" },
+        { name: "胡萝卜", key: "carrot", icon: "🥕" },
+        { name: "鲜鱼", key: "fish", icon: "🐟" },
+        { name: "兽肉", key: "meat", icon: "🥩" }
+    ];
+
+    list.forEach(ing => {
+        const btn = document.createElement("button");
+        btn.className = "ing-btn";
+        btn.textContent = `${ing.icon} ${ing.name} (${data[ing.key]})`;
+        btn.onclick = () => {
+            if (data[ing.key] > 0) {
+                data[ing.key]--;
+                currentPotItems.push(ing.name);
+                renderCookingUI();
+            } else {
+                showMessage(`⚠️ 没有足够的 ${ing.name}！`);
+            }
+        };
+        ingInventory.appendChild(btn);
+    });
+}
+
+function getRawKey(name) {
+    if (name === "小麦") return "wheat";
+    if (name === "胡萝卜") return "carrot";
+    if (name === "鲜鱼") return "fish";
+    if (name === "兽肉") return "meat";
+}
+
+document.getElementById("startCookBtn").onclick = () => {
+    if (currentPotItems.length === 0) {
+        showMessage("🍲 锅里还是空的，请先加入食材！");
+        return;
+    }
+
+    audio.playSizzle();
+
+    // 烹饪自由匹配配方计算
+    const counts = {};
+    currentPotItems.forEach(x => counts[x] = (counts[x] || 0) + 1);
+
+    let dishName = "奇怪的焦糊料理";
+    let recoverHunger = 15;
+    let recoverStamina = 10;
+
+    if (counts["小麦"] && counts["兽肉"]) {
+        dishName = "🍔 经典牛肉汉堡"; recoverHunger = 65; recoverStamina = 40;
+    } else if (counts["鲜鱼"] && counts["胡萝卜"]) {
+        dishName = "🍲 鲜鱼胡萝卜浓汤"; recoverHunger = 50; recoverStamina = 35;
+    } else if (counts["小麦"] >= 2) {
+        dishName = "🍞 香烤鲜面包"; recoverHunger = 35; recoverStamina = 20;
+    } else if (counts["兽肉"]) {
+        dishName = "🥩 香烤烤肉排"; recoverHunger = 45; recoverStamina = 25;
+    } else if (counts["鲜鱼"]) {
+        dishName = "烤鱼"; recoverHunger = 30; recoverStamina = 15;
+    }
+
+    data.hunger = Math.min(100, data.hunger + recoverHunger);
+    data.stamina = Math.min(100, data.stamina + recoverStamina);
+
+    showMessage(`🎉 烹饪成功！做出了【${dishName}】！饱腹度+${recoverHunger} 体力+${recoverStamina}`);
+    currentPotItems = [];
+    cookingModal.style.display = "none";
+    updateUI();
+};
+
+document.getElementById("closeCookBtn").onclick = () => {
+    // 退还食材
+    currentPotItems.forEach(item => data[getRawKey(item)]++);
+    currentPotItems = [];
+    cookingModal.style.display = "none";
+    updateUI();
+};
+
+/* =========================================================
+   6. 拟真移动控制与核心游戏逻辑
 ========================================================= */
 
 const keys = {};
@@ -839,7 +1005,7 @@ function updatePlayerMovement(delta) {
     const nextX = player.position.x + moveX * speed * delta;
     const nextZ = player.position.z + moveZ * speed * delta;
 
-    // AABB 包围盒碰撞检测
+    // AABB 碰撞阻挡
     const playerBox = new THREE.Box3().setFromCenterAndSize(
         new THREE.Vector3(nextX, 1, nextZ),
         new THREE.Vector3(0.9, 2, 0.9)
@@ -847,10 +1013,7 @@ function updatePlayerMovement(delta) {
 
     let collided = false;
     for (const box of colliders) {
-        if (playerBox.intersectsBox(box)) {
-            collided = true;
-            break;
-        }
+        if (playerBox.intersectsBox(box)) { collided = true; break; }
     }
 
     if (!collided) {
@@ -878,29 +1041,16 @@ function updateCamera() {
     camera.lookAt(target);
 }
 
-/* =========================================================
-   6. 业务交互逻辑 (砍树、钓鱼、耕作)
-========================================================= */
-
 function handleInteraction() {
-    if (data.stamina <= 0) { showMessage("⚡ 体力已耗尽，请稍作休息！"); return; }
+    if (data.stamina <= 0) { showMessage("⚡ 体力枯竭，无法进行操作！"); return; }
 
-    // 钓鱼逻辑
-    if (currentTool === "rod") {
-        if (player.position.distanceTo(lake.position) < 14) {
-            data.stamina -= 8;
-            data.fish += 1;
-            audio.playActionSound();
-            showMessage("🎣 成功钓到一条鲜鱼！+1 鲜鱼");
-            updateUI();
-            return;
-        } else {
-            showMessage("🌊 请靠近湖泊后再钓鱼！");
-            return;
-        }
+    // 检查是否靠近小木屋灶台 (开启烹饪系统)
+    if (player.position.distanceTo(new THREE.Vector3(20, 0, -20)) < 12) {
+        openCookingMenu();
+        return;
     }
 
-    // 砍树逻辑
+    // 斧头砍树
     if (currentTool === "axe") {
         let nearestTree = null, minD = 999;
         for (const t of trees) {
@@ -908,54 +1058,58 @@ function handleInteraction() {
             if (d < minD && d < 6) { minD = d; nearestTree = t; }
         }
         if (nearestTree) {
-            data.stamina -= 10;
+            data.stamina -= 8;
             data.wood += 3;
+            if (Math.random() < 0.3) data.meat += 1; // 偶尔打猎获得兽肉
             audio.playChop();
             nearestTree.scale.multiplyScalar(0.92);
-            showMessage("🪓 砍伐树木！+3 木材");
+            showMessage("🪓 砍伐树木！木材+3 (概率获得兽肉)");
+            updateUI();
+            return;
+        }
+    }
+
+    // 锄头耕作
+    if (currentTool === "hoe") {
+        data.stamina -= 5;
+        if (Math.random() > 0.5) { data.wheat += 1; showMessage("🌱 开垦收获了【小麦】！"); }
+        else { data.carrot += 1; showMessage("🥕 开垦收获了【胡萝卜】！"); }
+        audio.playTone(200, "sine", 0.1);
+        updateUI();
+        return;
+    }
+
+    // 鱼竿钓鱼
+    if (currentTool === "rod") {
+        if (player.position.distanceTo(lake.position) < 14) {
+            data.stamina -= 6;
+            data.fish += 1;
+            audio.playWater();
+            showMessage("🎣 垂钓成功！获得【鲜鱼】+1");
             updateUI();
             return;
         } else {
-            showMessage("🌳 附近没有可砍伐的树木！");
+            showMessage("🌊 请靠近湖泊后再抛竿钓鱼！");
             return;
         }
     }
 
-    // 锄头耕作逻辑
-    if (currentTool === "hoe") {
-        data.stamina -= 5;
-        data.wheat += 1;
-        audio.playActionSound();
-        showMessage("🌱 开垦土地并收获！+1 小麦");
-        updateUI();
-        return;
-    }
-
-    // 空手交易/房屋交互
-    if (player.position.distanceTo(new THREE.Vector3(15, 0, -15)) < 10) {
-        if (data.wheat > 0 || data.fish > 0) {
-            const earned = data.wheat * 15 + data.fish * 30;
-            data.gold += earned;
-            data.wheat = 0; data.fish = 0;
-            audio.playActionSound();
-            showMessage(`🏪 在售卖小屋出售物资，获得 +${earned} 金币！`);
-        } else {
-            showMessage("🏪 没有可出售的小麦或鲜鱼！");
-        }
-        updateUI();
-        return;
-    }
-
-    showMessage("💡 请切换正确的手持工具（斧头/锄头/鱼竿）进行互动");
+    showMessage("💡 请靠近小木屋灶台，或使用 1-4 切换工具进行交互！");
 }
 
 function updateUI() {
-    document.getElementById("gold").textContent = data.gold;
-    document.getElementById("stamina").textContent = Math.floor(data.stamina);
-    document.getElementById("wheat").textContent = data.wheat;
-    document.getElementById("wood").textContent = data.wood;
-    document.getElementById("fish").textContent = data.fish;
+    document.getElementById("staminaVal").textContent = `${Math.floor(data.stamina)}/100`;
+    document.getElementById("hungerVal").textContent = `${Math.floor(data.hunger)}/100`;
     document.getElementById("staminaBar").style.width = Math.max(0, data.stamina) + "%";
+    document.getElementById("hungerBar").style.width = Math.max(0, data.hunger) + "%";
+
+    document.getElementById("gold").textContent = data.gold;
+    document.getElementById("wood").textContent = data.wood;
+    document.getElementById("wheat").textContent = data.wheat;
+    document.getElementById("carrot").textContent = data.carrot;
+    document.getElementById("fish").textContent = data.fish;
+    document.getElementById("meat").textContent = data.meat;
+    document.getElementById("weatherText").textContent = currentWeather;
 
     const hour = Math.floor(data.gameTime);
     const minute = Math.floor((data.gameTime - hour) * 60);
@@ -986,10 +1140,10 @@ window.addEventListener("resize", () => {
     composer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// 检查会话
+// 检查会话状态
 checkSession();
 
-// 游戏主循环
+// 游戏主帧循环
 const clock = new THREE.Clock();
 
 function animate() {
@@ -998,14 +1152,25 @@ function animate() {
 
     if (currentUser) {
         updatePlayerMovement(delta);
-        
-        // 游戏时间推进与昼夜更替
-        data.gameTime += delta * 0.03;
+
+        // 拟真时间与自然饥饿/体力消耗
+        data.gameTime += delta * 0.05;
         if (data.gameTime >= 24) {
             data.gameTime -= 24;
-            data.stamina = Math.min(100, data.stamina + 50);
-            showMessage("🌅 经过一夜修整，体力得到恢复！");
+            // 随机切换天气 (晴朗 / 下雨 / 降雪)
+            const r = Math.random();
+            currentWeather = r < 0.5 ? "晴朗" : (r < 0.8 ? "下雨" : "降雪");
+            showMessage(`🌅 新的一天开始，今天的天气是【${currentWeather}】！`);
         }
+
+        // 饥饿度随时间自然下降
+        data.hunger = Math.max(0, data.hunger - delta * 0.3);
+        if (data.hunger === 0) {
+            // 饱腹度为零时持续消耗体力
+            data.stamina = Math.max(0, data.stamina - delta * 2);
+        }
+
+        updateWeatherSystem(delta);
         updateUI();
     }
 
