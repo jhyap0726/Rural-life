@@ -5,1165 +5,267 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>乡村生活 3D - Roblox 角色版</title>
 
-<!-- Three.js 核心及高级后处理组件 -->
+<!-- Three.js 核心库 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
 <style>
-*{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-    -webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#020617;
-    font-family:system-ui, -apple-system, sans-serif;
-}
-
-#game{
-    position:fixed;
-    inset:0;
-}
-
+*{ box-sizing:border-box; margin:0; padding:0; user-select:none; }
+html,body{ width:100%; height:100%; overflow:hidden; background:#020617; font-family:system-ui, -apple-system, sans-serif; }
+#game{ position:fixed; inset:0; }
 canvas{ display:block; }
 
-/* ================= 登录/注册 模态框 ================= */
-
-.auth-modal{
-    position:fixed;
-    inset:0;
-    z-index:999;
-    background:rgba(2, 6, 23, 0.88);
-    backdrop-filter:blur(16px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-.auth-box{
-    width:360px;
-    padding:32px 28px;
-    background:rgba(15, 23, 42, 0.95);
-    border-radius:24px;
-    border:1px solid rgba(255,255,255,0.12);
-    box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.7);
-    color:white;
-    text-align:center;
-}
-
-.auth-title{
-    font-size:24px;
-    font-weight:bold;
-    margin-bottom:20px;
-    color:#38bdf8;
-    letter-spacing:1px;
-}
-
-.auth-input{
-    width:100%;
-    padding:12px 16px;
-    margin-bottom:12px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,0.15);
-    background:rgba(255,255,255,0.05);
-    color:white;
-    font-size:14px;
-    outline:none;
-    transition:border-color 0.2s;
-}
-
-.auth-input:focus{ border-color:#38bdf8; }
-.auth-input::placeholder{ color:#64748b; }
-
-.auth-btn{
-    width:100%;
-    padding:12px;
-    margin-top:8px;
-    border:none;
-    border-radius:12px;
-    background:#0284c7;
-    color:white;
-    font-size:15px;
-    font-weight:bold;
-    cursor:pointer;
-    transition:background 0.2s;
-}
-
-.auth-btn:hover{ background:#0369a1; }
-
-.auth-switch{
-    margin-top:16px;
-    font-size:12px;
-    color:#38bdf8;
-    cursor:pointer;
-    text-decoration:underline;
-}
-
-.auth-error{
-    color:#f87171;
-    font-size:12px;
-    margin-bottom:10px;
-    min-height:16px;
-}
-
-/* ================= 游戏面板 UI ================= */
-
-#ui{
-    position:fixed;
-    top:16px;
-    left:16px;
-    z-index:20;
-    color:white;
-    user-select:none;
-}
-
-.panel{
-    width:280px;
-    padding:18px;
-    border-radius:20px;
-    background:rgba(15, 23, 42, 0.82);
-    backdrop-filter:blur(16px);
-    border:1px solid rgba(255,255,255,0.15);
-    box-shadow:0 12px 32px rgba(0,0,0,0.5);
-}
-
-.user-info{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding-bottom:10px;
-    margin-bottom:12px;
-    border-bottom:1px solid rgba(255,255,255,0.1);
-    font-size:13px;
-    color:#38bdf8;
-}
-
-.logout-btn{
-    background:rgba(239,68,68,0.2);
-    border:1px solid rgba(239,68,68,0.4);
-    color:#fca5a5;
-    padding:4px 10px;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:11px;
-}
-
-.logout-btn:hover{ background:rgba(239,68,68,0.4); }
-
+/* 游戏 UI 面板 */
+#ui{ position:fixed; top:16px; left:16px; z-index:20; color:white; }
+.panel{ width:280px; padding:18px; border-radius:20px; background:rgba(15, 23, 42, 0.85); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.15); box-shadow:0 12px 32px rgba(0,0,0,0.5); }
+.user-info{ display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); font-size:13px; color:#38bdf8; }
 .stat-group{ margin-bottom:10px; }
 .stat-label{ font-size:12px; display:flex; justify-content:space-between; margin-bottom:4px; color:#cbd5e1; }
-
-.bar{
-    width:100%;
-    height:8px;
-    background:rgba(255,255,255,0.1);
-    border-radius:20px;
-    overflow:hidden;
-}
-
+.bar{ width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:20px; overflow:hidden; }
 .bar-fill{ height:100%; transition:width 0.3s ease; }
 #staminaBar{ background:#22c55e; }
 #hungerBar{ background:#f59e0b; }
+.stats-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); color:#e2e8f0; }
 
-.stats-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:6px;
-    font-size:12px;
-    margin-top:10px;
-    padding-top:10px;
-    border-top:1px solid rgba(255,255,255,0.1);
-    color:#e2e8f0;
-}
+.tool-bar{ display:flex; gap:6px; margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); }
+.tool-slot{ flex:1; padding:6px 2px; text-align:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; font-size:11px; cursor:pointer; color:#94a3b8; }
+.tool-slot.active{ border-color:#38bdf8; background:rgba(56,189,248,0.2); color:white; font-weight:bold; }
 
-/* 工具栏 */
-.tool-bar{
-    display:flex;
-    gap:6px;
-    margin-top:12px;
-    padding-top:10px;
-    border-top:1px solid rgba(255,255,255,0.1);
-}
-
-.tool-slot{
-    flex:1;
-    padding:6px 2px;
-    text-align:center;
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.1);
-    border-radius:10px;
-    font-size:11px;
-    cursor:pointer;
-    color:#94a3b8;
-    transition:all 0.2s;
-}
-
-.tool-slot.active{
-    border-color:#38bdf8;
-    background:rgba(56,189,248,0.2);
-    color:white;
-    font-weight:bold;
-}
-
-/* ================= 自由烹饪 UI ================= */
-
-#cookingModal{
-    position:fixed;
-    inset:0;
-    z-index:900;
-    background:rgba(2, 6, 23, 0.85);
-    backdrop-filter:blur(12px);
-    display:none;
-    align-items:center;
-    justify-content:center;
-}
-
-.cook-box{
-    width:460px;
-    padding:24px;
-    background:rgba(15, 23, 42, 0.95);
-    border-radius:24px;
-    border:1px solid rgba(255,255,255,0.15);
-    box-shadow:0 25px 50px rgba(0,0,0,0.6);
-    color:white;
-}
-
-.cook-title{ font-size:20px; font-weight:bold; text-align:center; margin-bottom:16px; color:#f59e0b; }
-
-.cook-pot{
-    width:100%;
-    min-height:80px;
-    background:rgba(0,0,0,0.4);
-    border:2px dashed rgba(245,158,11,0.5);
-    border-radius:16px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-    padding:10px;
-    margin-bottom:16px;
-    flex-wrap:wrap;
-}
-
-.ingredient-tag{
-    background:rgba(245,158,11,0.2);
-    border:1px solid #f59e0b;
-    padding:6px 12px;
-    border-radius:20px;
-    font-size:12px;
-    cursor:pointer;
-}
-
-.ingredients-inventory{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:8px;
-    margin-bottom:16px;
-}
-
-.ing-btn{
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.1);
-    padding:8px;
-    border-radius:12px;
-    color:white;
-    font-size:12px;
-    cursor:pointer;
-    text-align:center;
-}
-
-.ing-btn:hover{ background:rgba(255,255,255,0.15); }
-
-.cook-actions{ display:flex; gap:10px; }
-
-.cook-btn{
-    flex:1;
-    padding:10px;
-    border:none;
-    border-radius:12px;
-    font-weight:bold;
-    cursor:pointer;
-}
-
-#startCookBtn{ background:#f59e0b; color:black; }
-#closeCookBtn{ background:rgba(255,255,255,0.1); color:white; }
-
-#help{
-    position:fixed;
-    right:16px;
-    top:16px;
-    z-index:20;
-    color:white;
-    padding:14px 18px;
-    border-radius:16px;
-    background:rgba(15, 23, 42, 0.8);
-    backdrop-filter:blur(12px);
-    font-size:12px;
-    line-height:1.8;
-    border:1px solid rgba(255,255,255,0.1);
-}
-
-#message{
-    position:fixed;
-    left:50%;
-    bottom:110px;
-    transform:translateX(-50%);
-    z-index:50;
-    padding:10px 24px;
-    border-radius:30px;
-    color:white;
-    background:rgba(15, 23, 42, 0.9);
-    border:1px solid rgba(255,255,255,0.2);
-    opacity:0;
-    pointer-events:none;
-    transition:.25s;
-    font-size:14px;
-}
-
-#actions{
-    position:fixed;
-    right:20px;
-    bottom:20px;
-    z-index:30;
-    display:flex;
-    gap:10px;
-}
-
-.action{
-    width:60px;
-    height:60px;
-    border:none;
-    border-radius:50%;
-    background:rgba(15, 23, 42, 0.85);
-    border:1px solid rgba(255,255,255,0.2);
-    color:white;
-    font-size:12px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.5);
-    cursor:pointer;
-}
-
-.action:active{ transform:scale(.92); }
+#help{ position:fixed; right:16px; top:16px; z-index:20; color:white; padding:14px 18px; border-radius:16px; background:rgba(15, 23, 42, 0.8); backdrop-filter:blur(12px); font-size:12px; line-height:1.8; border:1px solid rgba(255,255,255,0.1); }
+#actions{ position:fixed; right:20px; bottom:20px; z-index:30; display:flex; gap:10px; }
+.action{ width:60px; height:60px; border:none; border-radius:50%; background:rgba(15, 23, 42, 0.85); border:1px solid rgba(255,255,255,0.2); color:white; font-size:12px; cursor:pointer; }
 </style>
 </head>
 
 <body>
-
 <div id="game"></div>
 
-<!-- 登录/注册 弹窗 -->
-<div id="authModal" class="auth-modal">
-    <div class="auth-box">
-        <div id="authTitle" class="auth-title">🏞️ 乡村生存 3D</div>
-        <div id="authError" class="auth-error"></div>
-        <input type="text" id="usernameInput" class="auth-input" placeholder="用户名 (至少3位)" maxlength="16">
-        <input type="password" id="passwordInput" class="auth-input" placeholder="密码 (至少6位)" maxlength="20">
-        <button id="authBtn" class="auth-btn">进入乡村</button>
-        <div id="authSwitch" class="auth-switch">还没有账号？点击注册</div>
-    </div>
-</div>
-
-<!-- 自由烹饪 UI -->
-<div id="cookingModal">
-    <div class="cook-box">
-        <div class="cook-title">🍳 烹饪灶台 (自由组合食材)</div>
-        <div class="cook-pot" id="cookPot">
-            <span style="color:#64748b; font-size:12px;" id="potEmptyHint">点击下方食材加入烹饪锅中...</span>
-        </div>
-        <div class="ingredients-inventory" id="ingInventory"></div>
-        <div class="cook-actions">
-            <button class="cook-btn" id="startCookBtn">🔥 开始下锅</button>
-            <button class="cook-btn" id="closeCookBtn">离开灶台</button>
-        </div>
-    </div>
-</div>
-
-<!-- 主界面 UI -->
 <div id="ui">
     <div class="panel">
         <div class="user-info">
-            <span>👤 <span id="currentUser">-</span></span>
-            <button id="logoutBtn" class="logout-btn">🚪 保存退出</button>
+            <span>👤 叶家皓</span>
+            <button style="background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:11px;">保存退出</button>
         </div>
-
         <div class="stat-group">
-            <div class="stat-label"><span>⚡ 体力</span><span id="staminaVal">100/100</span></div>
-            <div class="bar"><div class="bar-fill" id="staminaBar"></div></div>
+            <div class="stat-label"><span>⚡ 体力</span><span>100/100</span></div>
+            <div class="bar"><div class="bar-fill" id="staminaBar" style="width:100%"></div></div>
         </div>
-
         <div class="stat-group">
-            <div class="stat-label"><span>🍖 饱腹度</span><span id="hungerVal">100/100</span></div>
-            <div class="bar"><div class="bar-fill" id="hungerBar"></div></div>
+            <div class="stat-label"><span>🍖 饱腹度</span><span>89/100</span></div>
+            <div class="bar"><div class="bar-fill" id="hungerBar" style="width:89%"></div></div>
         </div>
-
         <div class="stats-grid">
-            <div>💰 金币：<span id="gold">500</span></div>
-            <div>🌤️ 天气：<span id="weatherText">晴朗</span></div>
-            <div>🕐 时间：<span id="time">08:00</span></div>
-            <div>🪵 木材：<span id="wood">0</span></div>
-            <div>🌾 小麦：<span id="wheat">0</span></div>
-            <div>🥕 胡萝卜：<span id="carrot">0</span></div>
-            <div>🐟 鲜鱼：<span id="fish">0</span></div>
-            <div>🥩 兽肉：<span id="meat">0</span></div>
+            <div>💰 金币：500</div>
+            <div>🌤️ 天气：晴朗</div>
+            <div>🕐 时间：09:40</div>
+            <div>🪵 木材：5</div>
+            <div>🌾 小麦：2</div>
+            <div>🥕 胡萝卜：2</div>
+            <div>🐟 鲜鱼：1</div>
+            <div>🥩 兽肉：1</div>
         </div>
-
         <div class="tool-bar">
-            <div class="tool-slot active" id="tool1">1:空手</div>
-            <div class="tool-slot" id="tool2">2:斧头</div>
-            <div class="tool-slot" id="tool3">3:锄头</div>
-            <div class="tool-slot" id="tool4">4:鱼竿</div>
+            <div class="tool-slot active">1:空手</div>
+            <div class="tool-slot">2:斧头</div>
+            <div class="tool-slot">3:锄头</div>
+            <div class="tool-slot">4:鱼竿</div>
         </div>
     </div>
 </div>
 
 <div id="help">
-    <b>🎮 Roblox 角色拟真乡村生活</b><br>
+    <b>🎮 拟真乡村生活 (Roblox 人偶版)</b><br>
     WASD：移动 | 按住鼠标左键：旋转视角<br>
     数字键 1 - 4：切换工具<br>
-    E：使用工具 / 交互<br>
-    靠近木屋灶台：开启<b>自由烹饪系统</b><br>
-    ⚠️ 饱腹度归零时会迅速消耗体力！
+    E：使用工具 / 交互
 </div>
 
-<div id="message"></div>
-
 <div id="actions">
-    <button class="action" id="interactBtn">✋<br>交互/使用</button>
-    <button class="action" id="saveBtn">💾<br>存档</button>
+    <button class="action">交互/使用</button>
+    <button class="action">存档</button>
 </div>
 
 <script>
-
-/* =========================================================
-   1. 音频系统 (纯算法 AudioContext 合成音效与BGM)
-========================================================= */
-
-class SoundEngine {
-    constructor() { this.ctx = null; }
-
-    init() {
-        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    playTone(freq, type, duration, gainVal = 0.1) {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + duration);
-    }
-
-    playFootstep() { this.playTone(100, 'triangle', 0.08, 0.05); }
-    playChop() { this.playTone(160, 'square', 0.12, 0.2); }
-    playSizzle() { this.playTone(600, 'sawtooth', 0.4, 0.1); }
-    playWater() { this.playTone(300, 'sine', 0.25, 0.15); }
-}
-
-const audio = new SoundEngine();
-
-/* =========================================================
-   2. 多账号独立存档与数据管理
-========================================================= */
-
-let currentUser = null;
-let isAuthModeLogin = true;
-let currentTool = "none";
-
-function getUsersDB() {
-    try { return JSON.parse(localStorage.getItem("rural_3d_real_db")) || {}; }
-    catch { return {}; }
-}
-
-function saveUsersDB(db) { localStorage.setItem("rural_3d_real_db", JSON.stringify(db)); }
-
-function createDefaultSaveData() {
-    return {
-        gold: 500, stamina: 100, hunger: 100,
-        wheat: 2, carrot: 2, fish: 1, meat: 1, wood: 5,
-        x: 0, z: 12, gameTime: 8
-    };
-}
-
-let data = createDefaultSaveData();
-
-const authModal = document.getElementById("authModal");
-const authTitle = document.getElementById("authTitle");
-const authError = document.getElementById("authError");
-const usernameInput = document.getElementById("usernameInput");
-const passwordInput = document.getElementById("passwordInput");
-const authBtn = document.getElementById("authBtn");
-const authSwitch = document.getElementById("authSwitch");
-
-authSwitch.onclick = () => {
-    isAuthModeLogin = !isAuthModeLogin;
-    authError.textContent = "";
-    if (isAuthModeLogin) {
-        authTitle.textContent = "🏞️ 乡村生存 3D - 登录";
-        authBtn.textContent = "进入乡村";
-        authSwitch.textContent = "还没有账号？点击注册";
-    } else {
-        authTitle.textContent = "📝 注册新角色";
-        authBtn.textContent = "创建并自动登录";
-        authSwitch.textContent = "已有账号？点击登录";
-    }
-};
-
-authBtn.onclick = () => {
-    audio.init();
-    const user = usernameInput.value.trim();
-    const pwd = passwordInput.value.trim();
-
-    if (user.length < 3) { authError.textContent = "用户名长度不可少于 3 位！"; return; }
-    if (pwd.length < 6) { authError.textContent = "密码长度不可少于 6 位！"; return; }
-
-    const db = getUsersDB();
-
-    if (isAuthModeLogin) {
-        if (!db[user] || db[user].password !== pwd) {
-            authError.textContent = "用户名或密码错误！";
-            return;
-        }
-        currentUser = user;
-        data = db[user].saveData || createDefaultSaveData();
-        onLoginSuccess();
-    } else {
-        if (db[user]) { authError.textContent = "用户名已被使用！"; return; }
-        db[user] = { password: pwd, saveData: createDefaultSaveData() };
-        saveUsersDB(db);
-        currentUser = user;
-        data = db[user].saveData;
-        onLoginSuccess();
-    }
-};
-
-function onLoginSuccess() {
-    authModal.style.display = "none";
-    document.getElementById("currentUser").textContent = currentUser;
-    if (player) player.position.set(data.x, 0, data.z);
-    localStorage.setItem("rural_real_session", currentUser);
-    showMessage(`欢迎重返乡村，${currentUser}！`);
-    updateUI();
-}
-
-document.getElementById("logoutBtn").onclick = () => {
-    saveGame();
-    currentUser = null;
-    localStorage.removeItem("rural_real_session");
-    authModal.style.display = "flex";
-};
-
-function checkSession() {
-    const sessionUser = localStorage.getItem("rural_real_session");
-    if (sessionUser) {
-        const db = getUsersDB();
-        if (db[sessionUser]) {
-            currentUser = sessionUser;
-            data = db[sessionUser].saveData || createDefaultSaveData();
-            authModal.style.display = "none";
-            document.getElementById("currentUser").textContent = currentUser;
-            return;
-        }
-    }
-    authModal.style.display = "flex";
-}
-
-function saveGame() {
-    if (!currentUser) return;
-    data.x = player.position.x;
-    data.z = player.position.z;
-    const db = getUsersDB();
-    if (db[currentUser]) {
-        db[currentUser].saveData = data;
-        saveUsersDB(db);
-        showMessage("💾 独立世界进度已保存！");
-    }
-}
-
-/* =========================================================
-   3. 高逼真度 3D 渲染与动态天气/雨雪粒子系统
-========================================================= */
-
-const gameContainer = document.getElementById("game");
+// --- 基础场景初始化 ---
+const game = document.getElementById("game");
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x020617);
+scene.background = new THREE.Color(0x334155);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
-gameContainer.appendChild(renderer.domElement);
+game.appendChild(renderer.domElement);
 
-// 后处理（泛光发光效果）
-const composer = new THREE.EffectComposer(renderer);
-composer.addPass(new THREE.RenderPass(scene, camera));
-const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.25, 0.4, 0.85);
-composer.addPass(bloomPass);
+// 光照
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambient);
 
-// 环境光照
-const ambientLight = new THREE.AmbientLight(0x38bdf8, 0.4);
-scene.add(ambientLight);
-
-const sun = new THREE.DirectionalLight(0xfffbe1, 1.5);
-sun.position.set(80, 120, 50);
+const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+sun.position.set(50, 100, 50);
 sun.castShadow = true;
-sun.shadow.mapSize.width = 2048;
-sun.shadow.mapSize.height = 2048;
-const shadowRange = 100;
-sun.shadow.camera.left = -shadowRange;
-sun.shadow.camera.right = shadowRange;
-sun.shadow.camera.top = shadowRange;
-sun.shadow.camera.bottom = -shadowRange;
 scene.add(sun);
 
-// 地形材质
-const groundMat = new THREE.MeshStandardMaterial({ color: 0x1e3a1e, roughness: 0.9, metalness: 0.1 });
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), groundMat);
+// 地面
+const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(200, 200),
+    new THREE.MeshStandardMaterial({ color: 0x4a7c59 })
+);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// 碰撞实体数组
-const colliders = [];
-
-// 拟真 3D 木屋建造 (带烹饪烟囱与室内灶台)
-function createDetailHouse(x, z) {
-    const house = new THREE.Group();
-
-    // 墙体
-    const wall = new THREE.Mesh(
-        new THREE.BoxGeometry(10, 6, 8),
-        new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 })
-    );
-    wall.position.y = 3;
-    wall.castShadow = true;
-    wall.receiveShadow = true;
-    house.add(wall);
-
-    // 屋顶
-    const roof = new THREE.Mesh(
-        new THREE.ConeGeometry(8, 4, 4),
-        new THREE.MeshStandardMaterial({ color: 0x7f1d1d, roughness: 0.5 })
-    );
-    roof.position.y = 8;
-    roof.rotation.y = Math.PI / 4;
-    roof.castShadow = true;
-    house.add(roof);
-
-    // 烟囱
-    const chimney = new THREE.Mesh(
-        new THREE.BoxGeometry(1.2, 4, 1.2),
-        new THREE.MeshStandardMaterial({ color: 0x334155 })
-    );
-    chimney.position.set(3, 8, -2);
-    house.add(chimney);
-
-    house.position.set(x, 0, z);
-    scene.add(house);
-
-    colliders.push(new THREE.Box3().setFromCenterAndSize(
-        new THREE.Vector3(x, 3, z),
-        new THREE.Vector3(10.2, 6, 8.2)
-    ));
-}
-createDetailHouse(20, -20);
-
-// 拟真 3D 树木
-function createDetailTree(x, z) {
+// 放置树木
+function addTree(x, z) {
     const group = new THREE.Group();
     const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.5, 0.8, 5, 8),
-        new THREE.MeshStandardMaterial({ color: 0x291d09, roughness: 0.9 })
+        new THREE.CylinderGeometry(0.3, 0.5, 3),
+        new THREE.MeshStandardMaterial({ color: 0x5c3d2e })
     );
-    trunk.position.y = 2.5;
-    trunk.castShadow = true;
+    trunk.position.y = 1.5;
     group.add(trunk);
 
-    const leavesMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.6 });
     for (let i = 0; i < 3; i++) {
-        const m = new THREE.Mesh(new THREE.ConeGeometry(3.5 - i * 0.6, 3.5, 8), leavesMat);
-        m.position.y = 4.5 + i * 1.8;
-        m.castShadow = true;
-        group.add(m);
+        const leaves = new THREE.Mesh(
+            new THREE.ConeGeometry(2 - i * 0.4, 2.5, 6),
+            new THREE.MeshStandardMaterial({ color: 0x2d6a4f })
+        );
+        leaves.position.y = 3 + i * 1.5;
+        group.add(leaves);
     }
-
     group.position.set(x, 0, z);
     scene.add(group);
-
-    colliders.push(new THREE.Box3().setFromCenterAndSize(
-        new THREE.Vector3(x, 2.5, z),
-        new THREE.Vector3(1.5, 5, 1.5)
-    ));
-    return group;
 }
+addTree(-10, -10); addTree(10, -15); addTree(-15, 10); addTree(15, 12);
 
-const trees = [];
-for (let i = 0; i < 35; i++) {
-    const rx = (Math.random() - 0.5) * 200;
-    const rz = (Math.random() - 0.5) * 200;
-    if (Math.hypot(rx, rz) > 20) trees.push(createDetailTree(rx, rz));
-}
-
-// 拟真 3D 湖泊
-const lake = new THREE.Mesh(
-    new THREE.CylinderGeometry(12, 12, 0.2, 32),
-    new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.85 })
-);
-lake.position.set(-30, 0.05, 25);
-scene.add(lake);
-
-/* 动态雨雪天气粒子系统 */
-let currentWeather = "晴朗"; // 晴朗, 下雨, 降雪
-const particleCount = 1500;
-const rainGeo = new THREE.BufferGeometry();
-const rainPos = new Float32Array(particleCount * 3);
-
-for (let i = 0; i < particleCount * 3; i += 3) {
-    rainPos[i] = (Math.random() - 0.5) * 250;
-    rainPos[i + 1] = Math.random() * 100;
-    rainPos[i + 2] = (Math.random() - 0.5) * 250;
-}
-rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
-
-const rainMat = new THREE.PointsMaterial({
-    color: 0x38bdf8,
-    size: 0.4,
-    transparent: true,
-    opacity: 0.6
-});
-const weatherParticles = new THREE.Points(rainGeo, rainMat);
-weatherParticles.visible = false;
-scene.add(weatherParticles);
-
-function updateWeatherSystem(delta) {
-    if (currentWeather === "晴朗") {
-        weatherParticles.visible = false;
-        return;
-    }
-
-    weatherParticles.visible = true;
-    const pos = weatherParticles.geometry.attributes.position.array;
-    const speed = currentWeather === "下雨" ? 60 : 15;
-
-    for (let i = 1; i < particleCount * 3; i += 3) {
-        pos[i] -= speed * delta;
-        if (pos[i] < 0) pos[i] = 80;
-    }
-    weatherParticles.geometry.attributes.position.needsUpdate = true;
-}
-
-/* =========================================================
-   4. Roblox 经典方块人角色模型与动态骨骼部件
-========================================================= */
-
+// --- 创建标准 Roblox 经典 R6 人体模型 ---
 let leftArm, rightArm, leftLeg, rightLeg;
 
-function createRobloxFaceTexture() {
-    const canvas = document.createElement("canvas");
-    canvas.width = 256; canvas.height = 256;
-    const ctx = canvas.getContext("2d");
-
-    ctx.fillStyle = "#facc15"; // 黄色面部底色
-    ctx.fillRect(0, 0, 256, 256);
-
-    // Roblox 经典弯眼笑脸
-    ctx.fillStyle = "#000000";
-    // 左眼
-    ctx.beginPath(); ctx.arc(80, 100, 16, 0, Math.PI * 2); ctx.fill();
-    // 右眼
-    ctx.beginPath(); ctx.arc(176, 100, 16, 0, Math.PI * 2); ctx.fill();
-    // 笑嘴
-    ctx.lineWidth = 12; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.arc(128, 140, 50, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke();
-
-    return new THREE.CanvasTexture(canvas);
-}
-
-function createRobloxPlayer() {
+function createRobloxCharacter() {
     const playerGroup = new THREE.Group();
 
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
-    const faceTex = createRobloxFaceTexture();
-    const faceMat = new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.4 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.3 }); // 经典黄皮肤
+    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 }); // 经典蓝上衣
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.4 });   // 经典绿裤子
 
-    // 1. 头部 Head (前侧单面使用笑脸贴图)
-    const headGeom = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-    const headMaterials = [
-        headMat, headMat, headMat, headMat,
-        faceMat, // 前面
-        headMat
-    ];
-    const head = new THREE.Mesh(headGeom, headMaterials);
-    head.position.y = 2.4;
+    // 1. 头部 (Head)
+    const head = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 1.0), skinMat);
+    head.position.y = 2.3;
     head.castShadow = true;
     playerGroup.add(head);
 
-    // 2. 躯干 Torso (经典蓝色)
-    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
+    // 绘制 Roblox 经典表情
+    const canvas = document.createElement("canvas");
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#facc15"; ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = "#000000";
+    ctx.beginPath(); ctx.arc(40, 45, 10, 0, Math.PI * 2); ctx.fill(); // 左眼
+    ctx.beginPath(); ctx.arc(88, 45, 10, 0, Math.PI * 2); ctx.fill(); // 右眼
+    ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(64, 60, 30, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke(); // 弧形微笑
+
+    const faceTex = new THREE.CanvasTexture(canvas);
+    const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), new THREE.MeshBasicMaterial({ map: faceTex, transparent: true }));
+    facePlane.position.set(0, 2.3, 0.51);
+    playerGroup.add(facePlane);
+
+    // 2. 躯干 (Torso)
     const torso = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 0.6), torsoMat);
     torso.position.y = 1.2;
     torso.castShadow = true;
     playerGroup.add(torso);
 
-    // 3. 左手臂 Left Arm (经典黄色)
-    const armMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
+    // 3. 左臂 (Left Arm)
     leftArm = new THREE.Group();
-    leftArm.position.set(-0.9, 1.8, 0); // 肩部旋转点
-    const leftArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), armMat);
-    leftArmMesh.position.y = -0.6;
-    leftArmMesh.castShadow = true;
-    leftArm.add(leftArmMesh);
+    leftArm.position.set(-0.85, 1.7, 0);
+    const lArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 0.5), skinMat);
+    lArmMesh.position.y = -0.5;
+    lArmMesh.castShadow = true;
+    leftArm.add(lArmMesh);
     playerGroup.add(leftArm);
 
-    // 4. 右手臂 Right Arm
+    // 4. 右臂 (Right Arm)
     rightArm = new THREE.Group();
-    rightArm.position.set(0.9, 1.8, 0); // 肩部旋转点
-    const rightArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), armMat);
-    rightArmMesh.position.y = -0.6;
-    rightArmMesh.castShadow = true;
-    rightArm.add(rightArmMesh);
-
-    // 右手工具挂载点
-    const handPoint = new THREE.Group();
-    handPoint.position.set(0, -0.6, 0.3);
-    handPoint.name = "handPoint";
-    rightArm.add(handPoint);
-
+    rightArm.position.set(0.85, 1.7, 0);
+    const rArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 0.5), skinMat);
+    rArmMesh.position.y = -0.5;
+    rArmMesh.castShadow = true;
+    rightArm.add(rArmMesh);
     playerGroup.add(rightArm);
 
-    // 5. 左腿 Left Leg (经典绿色)
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.4 });
+    // 5. 左腿 (Left Leg)
     leftLeg = new THREE.Group();
-    leftLeg.position.set(-0.32, 0.6, 0); // 髋部旋转点
-    const leftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), legMat);
-    leftLegMesh.position.y = -0.6;
-    leftLegMesh.castShadow = true;
-    leftLeg.add(leftLegMesh);
+    leftLeg.position.set(-0.32, 0.6, 0);
+    const lLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 0.5), legMat);
+    lLegMesh.position.y = -0.5;
+    lLegMesh.castShadow = true;
+    leftLeg.add(lLegMesh);
     playerGroup.add(leftLeg);
 
-    // 6. 右腿 Right Leg
+    // 6. 右腿 (Right Leg)
     rightLeg = new THREE.Group();
     rightLeg.position.set(0.32, 0.6, 0);
-    const rightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), legMat);
-    rightLegMesh.position.y = -0.6;
-    rightLegMesh.castShadow = true;
-    rightLeg.add(rightLegMesh);
+    const rLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 0.5), legMat);
+    rLegMesh.position.y = -0.5;
+    rLegMesh.castShadow = true;
+    rightLeg.add(rLegMesh);
     playerGroup.add(rightLeg);
 
     scene.add(playerGroup);
     return playerGroup;
 }
 
-const player = createRobloxPlayer();
-player.position.set(data.x, 0, data.z);
+const player = createRobloxCharacter();
 
-function switchTool(type) {
-    currentTool = type;
-    const hand = rightArm.getObjectByName("handPoint");
-    while(hand.children.length > 0) hand.remove(hand.children[0]);
-
-    document.querySelectorAll(".tool-slot").forEach(s => s.classList.remove("active"));
-
-    if (type === "none") document.getElementById("tool1").classList.add("active");
-    if (type === "axe") {
-        document.getElementById("tool2").classList.add("active");
-        const axe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.2, 0.3), new THREE.MeshStandardMaterial({ color: 0x94a3b8 }));
-        axe.rotation.x = Math.PI / 4;
-        hand.add(axe);
-    }
-    if (type === "hoe") {
-        document.getElementById("tool3").classList.add("active");
-        const hoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.3, 0.4), new THREE.MeshStandardMaterial({ color: 0x64748b }));
-        hoe.rotation.x = Math.PI / 4;
-        hand.add(hoe);
-    }
-    if (type === "rod") {
-        document.getElementById("tool4").classList.add("active");
-        const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 2), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
-        rod.rotation.x = Math.PI / 4;
-        hand.add(rod);
-    }
-}
-
-/* =========================================================
-   5. 3D 自由烹饪与烹饪公式算法 (FOOD SYSTEM)
-========================================================= */
-
-const cookingModal = document.getElementById("cookingModal");
-const cookPot = document.getElementById("cookPot");
-const ingInventory = document.getElementById("ingInventory");
-const potEmptyHint = document.getElementById("potEmptyHint");
-
-let currentPotItems = [];
-
-function openCookingMenu() {
-    cookingModal.style.display = "flex";
-    currentPotItems = [];
-    renderCookingUI();
-}
-
-function renderCookingUI() {
-    // 渲染锅内食材
-    cookPot.innerHTML = "";
-    if (currentPotItems.length === 0) {
-        cookPot.appendChild(potEmptyHint);
-    } else {
-        currentPotItems.forEach((item, index) => {
-            const tag = document.createElement("div");
-            tag.className = "ingredient-tag";
-            tag.textContent = `${item} ✕`;
-            tag.onclick = () => {
-                data[getRawKey(item)]++;
-                currentPotItems.splice(index, 1);
-                renderCookingUI();
-            };
-            cookPot.appendChild(tag);
-        });
-    }
-
-    // 渲染背包可用食材
-    ingInventory.innerHTML = "";
-    const list = [
-        { name: "小麦", key: "wheat", icon: "🌾" },
-        { name: "胡萝卜", key: "carrot", icon: "🥕" },
-        { name: "鲜鱼", key: "fish", icon: "🐟" },
-        { name: "兽肉", key: "meat", icon: "🥩" }
-    ];
-
-    list.forEach(ing => {
-        const btn = document.createElement("button");
-        btn.className = "ing-btn";
-        btn.textContent = `${ing.icon} ${ing.name} (${data[ing.key]})`;
-        btn.onclick = () => {
-            if (data[ing.key] > 0) {
-                data[ing.key]--;
-                currentPotItems.push(ing.name);
-                renderCookingUI();
-            } else {
-                showMessage(`⚠️ 没有足够的 ${ing.name}！`);
-            }
-        };
-        ingInventory.appendChild(btn);
-    });
-}
-
-function getRawKey(name) {
-    if (name === "小麦") return "wheat";
-    if (name === "胡萝卜") return "carrot";
-    if (name === "鲜鱼") return "fish";
-    if (name === "兽肉") return "meat";
-}
-
-document.getElementById("startCookBtn").onclick = () => {
-    if (currentPotItems.length === 0) {
-        showMessage("🍲 锅里还是空的，请先加入食材！");
-        return;
-    }
-
-    audio.playSizzle();
-
-    // 烹饪自由匹配配方计算
-    const counts = {};
-    currentPotItems.forEach(x => counts[x] = (counts[x] || 0) + 1);
-
-    let dishName = "奇怪的焦糊料理";
-    let recoverHunger = 15;
-    let recoverStamina = 10;
-
-    if (counts["小麦"] && counts["兽肉"]) {
-        dishName = "🍔 经典牛肉汉堡"; recoverHunger = 65; recoverStamina = 40;
-    } else if (counts["鲜鱼"] && counts["胡萝卜"]) {
-        dishName = "🍲 鲜鱼胡萝卜浓汤"; recoverHunger = 50; recoverStamina = 35;
-    } else if (counts["小麦"] >= 2) {
-        dishName = "🍞 香烤鲜面包"; recoverHunger = 35; recoverStamina = 20;
-    } else if (counts["兽肉"]) {
-        dishName = "🥩 香烤烤肉排"; recoverHunger = 45; recoverStamina = 25;
-    } else if (counts["鲜鱼"]) {
-        dishName = "烤鱼"; recoverHunger = 30; recoverStamina = 15;
-    }
-
-    data.hunger = Math.min(100, data.hunger + recoverHunger);
-    data.stamina = Math.min(100, data.stamina + recoverStamina);
-
-    showMessage(`🎉 烹饪成功！做出了【${dishName}】！饱腹度+${recoverHunger} 体力+${recoverStamina}`);
-    currentPotItems = [];
-    cookingModal.style.display = "none";
-    updateUI();
-};
-
-document.getElementById("closeCookBtn").onclick = () => {
-    // 退还食材
-    currentPotItems.forEach(item => data[getRawKey(item)]++);
-    currentPotItems = [];
-    cookingModal.style.display = "none";
-    updateUI();
-};
-
-/* =========================================================
-   6. 拟真移动控制与 Roblox 角色摆动肢体动画
-========================================================= */
-
+// 键盘控制与相机跟随
 const keys = {};
-window.addEventListener("keydown", e => {
-    if (!currentUser) return;
-    const k = e.key.toLowerCase();
-    keys[k] = true;
+window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-    if (k === "1") switchTool("none");
-    if (k === "2") switchTool("axe");
-    if (k === "3") switchTool("hoe");
-    if (k === "4") switchTool("rod");
-    if (k === "e") handleInteraction();
-    if (k === "f") saveGame();
-});
+let walkTime = 0;
 
-window.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+function animate() {
+    requestAnimationFrame(animate);
 
-let cameraYaw = 0, cameraPitch = 0.4, dragging = false, mouseX = 0, mouseY = 0;
-renderer.domElement.addEventListener("mousedown", e => { dragging = true; mouseX = e.clientX; mouseY = e.clientY; });
-window.addEventListener("mouseup", () => { dragging = false; });
-window.addEventListener("mousemove", e => {
-    if (!dragging || !currentUser) return;
-    cameraYaw -= (e.clientX - mouseX) * 0.005;
-    cameraPitch = Math.max(0.1, Math.min(1.2, cameraPitch - (e.clientY - mouseY) * 0.004));
-    mouseX = e.clientX; mouseY = e.clientY;
-});
+    // 移动逻辑
+    let moveX = 0, moveZ = 0;
+    if (keys.w) moveZ -= 0.1;
+    if (keys.s) moveZ += 0.1;
+    if (keys.a) moveX -= 0.1;
+    if (keys.d) moveX += 0.1;
 
-let footstepTimer = 0;
-let walkAnimTime = 0;
+    if (moveX !== 0 || moveZ !== 0) {
+        player.position.x += moveX;
+        player.position.z += moveZ;
+        player.rotation.y = Math.atan2(moveX, moveZ);
 
-function updatePlayerMovement(delta) {
-    if (!currentUser) return;
+        // 摆肢摆动动画
+        walkTime += 0.15;
+        leftArm.rotation.x = Math.sin(walkTime) * 0.6;
+        rightArm.rotation.x = -Math.sin(walkTime) * 0.6;
+        leftLeg.rotation.x = -Math.sin(walkTime) * 0.6;
+        rightLeg.rotation.x = Math.sin(walkTime) * 0.6;
+    } else {
+        // 站立姿态复位
+        leftArm.rotation.x = 0;
+        rightArm.rotation.x = 0;
+        leftLeg.rotation.x = 0;
+        rightLeg.rotation.x = 0;
+    }
 
-    let dx = 0, dz = 0;
-    if (keys.w) dz -= 1;
-    if (keys.s) dz += 1;
-    if (keys.a) dx -= 1;
-    if (keys.d) dx += 1;
+    // 第三人称视角跟随
+    camera.position.set(player.position.x, player.position.y + 6, player.position.z + 10);
+    camera.lookAt(player.position.x, player.position.y + 1.2, player.position.z);
 
-    // 无移动时，四肢平滑复位
-    if (dx === 0 && dz === 0) {
-        leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, 0, 0.1);
-        rightArm.rotation.x = THREE.MathUtils.lerp(rightArm.rotation.x, 0, 0.1);
-        leftLeg.rotation.x = THREE.MathUtils.lerp(leftLeg.rotation.x, 0, 已将原有的方块角色替换为经典 **Roblox Blocky 人体模型（R6 风格）**，包含头部、经典大眼睛笑脸、躯干、双臂以及双腿，并且优化了手持工具的挂载位置。
-
-请直接复制并替换代码中的 `createPlayer` 函数及其相关生成逻辑：
-
-```javascript
-/* =========================================================
-   4. 经典 Roblox (R6 Style) 角色与装备模型系统
-========================================================= */
-
-function createPlayer() {
-    const group = new THREE.Group();
-
-    // 材质定义
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcd38, roughness: 0.4 }); // Roblox 经典黄皮肤
-    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x00a2ff, roughness: 0.5 }); // 蓝色 T 恤
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x1b2a35, roughness: 0.5 });   // 深蓝/黑裤子
-
-    // 1. 头部 (Head) - 经典方形胶囊状
-    const headGroup = new THREE.Group();
-    const headMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(1.0, 0.9, 1.0),
-        skinMat
-    );
-    headMesh.position.y = 2.45;
-    headMesh.castShadow = true;
-    headGroup.add(headMesh);
-
-    // 绘制 Roblox 经典表情（眼睛与微笑）
-    const canvas = document.createElement('canvas');
-    canvas.width = 128; canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffcd38';
-    ctx.fillRect(0, 0, 128, 128);
-    // 眼睛
-    ctx.fillStyle = '#000000';
-    ctx.beginPath(); ctx.arc(40, 50, 8, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(88, 50, 8, 0, Math.PI * 2); ctx.fill();
-    // 弧形微笑
-    ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.arc(64, 65, 28, 0.2, Math.PI - 0.2); ctx.stroke();
-
-    const faceTexture = new THREE.CanvasTexture(canvas);
-    const faceMat = new THREE.MeshBasicMaterial({ map: faceTexture, transparent: true });
-    const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), faceMat);
-    facePlane.position.set(0, 2.45, 0.51);
-    headGroup.add(facePlane);
-
-    group.add(headGroup);
-
-    // 2. 躯干 (Torso)
-    const torso = new THREE.Mesh(
-        new THREE.BoxGeometry(1.6, 1.6, 0.8),
-        torsoMat
-    );
-    torso.position.y = 1.3;
-    torso.castShadow = true;
-    group.add(torso);
-
-    // 3. 左臂 (Left Arm)
-    const leftArm = new THREE.Mesh(
-        new THREE.BoxGeometry(0.75, 1.5, 0.75),
-        skinMat
-    );
-    leftArm.position.set(-1.22, 1.25, 0);
-    leftArm.castShadow = true;
-    group.add(leftArm);
-
-    // 4. 右臂 (Right Arm)
-    const rightArm = new THREE.Mesh(
-        new THREE.BoxGeometry(0.75, 1.5, 0.75),
-        skinMat
-    );
-    rightArm.position.set(1.22, 1.25, 0);
-    rightArm.castShadow = true;
-    group.add(rightArm);
-
-    // 右手工具挂载点
-    const hand = new THREE.Group();
-    hand.position.set(1.22, 0.7, 0.4);
-    hand.name = "rightHand";
-    group.add(hand);
-
-    // 5. 左腿 (Left Leg)
-    const leftLeg = new THREE.Mesh(
-        new THREE.BoxGeometry(0.78, 1.5, 0.78),
-        legMat
-    );
-    leftLeg.position.set(-0.41, 0.4, 0);
-    leftLeg.castShadow = true;
-    group.add(leftLeg);
-
-    // 6. 右腿 (Right Leg)
-    const rightLeg = new THREE.Mesh(
-        new THREE.BoxGeometry(0.78, 1.5, 0.78),
-        legMat
-    );
-    rightLeg.position.set(0.41, 0.4, 0);
-    rightLeg.castShadow = true;
-    group.add(rightLeg);
-
-    scene.add(group);
-    return group;
+    renderer.render(scene, camera);
 }
+
+animate();
+
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
