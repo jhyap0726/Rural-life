@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>乡村生活 3D</title>
+<title>乡村生活 3D - 带用户系统</title>
 
 <style>
 *{
@@ -30,6 +30,85 @@ canvas{
     display:block;
 }
 
+/* ================= 用户登录注册弹窗 ================= */
+
+.auth-modal{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    background:rgba(0,0,0,.65);
+    backdrop-filter:blur(10px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.auth-box{
+    width:340px;
+    padding:30px;
+    background:rgba(20,30,22,.92);
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.2);
+    box-shadow:0 15px 35px rgba(0,0,0,.5);
+    color:white;
+    text-align:center;
+}
+
+.auth-title{
+    font-size:24px;
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+.auth-input{
+    width:100%;
+    padding:12px 15px;
+    margin-bottom:12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.1);
+    color:white;
+    font-size:14px;
+    outline:none;
+}
+
+.auth-input::placeholder{
+    color:#aaa;
+}
+
+.auth-btn{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    border:none;
+    border-radius:10px;
+    background:#477f3d;
+    color:white;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.auth-btn:hover{
+    background:#589d4b;
+}
+
+.auth-switch{
+    margin-top:15px;
+    font-size:12px;
+    color:#a1cfa1;
+    cursor:pointer;
+    text-decoration:underline;
+}
+
+.auth-error{
+    color:#ff6b6b;
+    font-size:12px;
+    margin-bottom:10px;
+    min-height:16px;
+}
+
 /* ================= UI ================= */
 
 #ui{
@@ -51,8 +130,33 @@ canvas{
     box-shadow:0 10px 30px rgba(0,0,0,.3);
 }
 
+.user-info{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-bottom:8px;
+    margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,.15);
+    font-size:13px;
+    color:#a1cfa1;
+}
+
+.logout-btn{
+    background:rgba(255,100,100,.25);
+    border:1px solid rgba(255,100,100,.4);
+    color:#ff9999;
+    padding:2px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:11px;
+}
+
+.logout-btn:hover{
+    background:rgba(255,100,100,.4);
+}
+
 .title{
-    font-size:22px;
+    font-size:20px;
     font-weight:bold;
     margin-bottom:10px;
 }
@@ -188,50 +292,17 @@ canvas{
     font-size:20px;
 }
 
-#up{
-    left:51px;
-    top:0;
-}
-
-#down{
-    left:51px;
-    bottom:0;
-}
-
-#left{
-    left:0;
-    top:51px;
-}
-
-#right{
-    right:0;
-    top:51px;
-}
+#up{ left:51px; top:0; }
+#down{ left:51px; bottom:0; }
+#left{ left:0; top:51px; }
+#right{ right:0; top:51px; }
 
 @media(max-width:700px){
-
-    #help{
-        display:none;
-    }
-
-    #mobile{
-        display:block;
-    }
-
-    #ui{
-        transform:scale(.85);
-        transform-origin:top left;
-    }
-
-    #actions{
-        right:10px;
-        bottom:20px;
-    }
-
-    .action{
-        width:54px;
-        height:54px;
-    }
+    #help{ display:none; }
+    #mobile{ display:block; }
+    #ui{ transform:scale(.85); transform-origin:top left; }
+    #actions{ right:10px; bottom:20px; }
+    .action{ width:54px; height:54px; }
 }
 </style>
 </head>
@@ -240,2085 +311,644 @@ canvas{
 
 <div id="game"></div>
 
-<!-- 游戏界面 -->
-<div id="ui">
-
-    <div class="panel">
-
-        <div class="title">
-            🌾 乡村生活 3D
-        </div>
-
-        <div class="stat">
-            💰 金币：
-            <span id="gold">500</span>
-        </div>
-
-        <div class="stat">
-            ⚡ 体力：
-            <span id="stamina">100</span>
-        </div>
-
-        <div class="bar">
-            <div id="staminaBar"></div>
-        </div>
-
-        <div class="stat">
-            🌾 小麦：
-            <span id="wheat">0</span>
-        </div>
-
-        <div class="stat">
-            🪵 木材：
-            <span id="wood">0</span>
-        </div>
-
-        <div class="stat">
-            🥕 胡萝卜：
-            <span id="carrot">0</span>
-        </div>
-
-        <div class="stat">
-            🕐 时间：
-            <span id="time">08:00</span>
-        </div>
-
-        <div class="stat">
-            ☀️ 天气：
-            <span id="weather">晴天</span>
-        </div>
-
+<!-- 登录/注册 弹窗 -->
+<div id="authModal" class="auth-modal">
+    <div class="auth-box">
+        <div id="authTitle" class="auth-title">🌾 登录游戏</div>
+        <div id="authError" class="auth-error"></div>
+        <input type="text" id="usernameInput" class="auth-input" placeholder="用户名" maxlength="16">
+        <input type="password" id="passwordInput" class="auth-input" placeholder="密码" maxlength="20">
+        <button id="authBtn" class="auth-btn">登录</button>
+        <div id="authSwitch" class="auth-switch">还没有账号？点击注册</div>
     </div>
-
 </div>
 
+<!-- 游戏界面 -->
+<div id="ui">
+    <div class="panel">
+        <div class="user-info">
+            <span>👤 <span id="currentUser">-</span></span>
+            <button id="logoutBtn" class="logout-btn">退出登录</button>
+        </div>
+
+        <div class="title">🌾 乡村生活 3D</div>
+
+        <div class="stat">💰 金币：<span id="gold">500</span></div>
+        <div class="stat">⚡ 体力：<span id="stamina">100</span></div>
+        <div class="bar"><div id="staminaBar"></div></div>
+        <div class="stat">🌾 小麦：<span id="wheat">0</span></div>
+        <div class="stat">🪵 木材：<span id="wood">0</span></div>
+        <div class="stat">🥕 胡萝卜：<span id="carrot">0</span></div>
+        <div class="stat">🕐 时间：<span id="time">08:00</span></div>
+    </div>
+</div>
 
 <div id="help">
-
     <b>🎮 操作</b><br>
-
     W A S D：移动<br>
     鼠标拖动：旋转镜头<br>
     E：互动 / 收割<br>
-    1：种植<br>
-    2：砍树<br>
-    3：钓鱼<br>
-    4：商店<br>
-    F：保存
-
+    1：种植 | 2：砍树 | 3：钓鱼<br>
+    4：商店 | F：保存
 </div>
-
 
 <div id="crosshair"></div>
-
 <div id="message"></div>
 
-
 <div id="actions">
-
-    <button class="action" id="plantBtn">
-        🌱<br>种植
-    </button>
-
-    <button class="action" id="interactBtn">
-        ✋<br>互动
-    </button>
-
-    <button class="action" id="saveBtn">
-        💾<br>保存
-    </button>
-
+    <button class="action" id="plantBtn">🌱<br>种植</button>
+    <button class="action" id="interactBtn">✋<br>互动</button>
+    <button class="action" id="saveBtn">💾<br>保存</button>
 </div>
-
 
 <div id="mobile">
-
-    <button class="mbtn" id="up">
-        ▲
-    </button>
-
-    <button class="mbtn" id="down">
-        ▼
-    </button>
-
-    <button class="mbtn" id="left">
-        ◀
-    </button>
-
-    <button class="mbtn" id="right">
-        ▶
-    </button>
-
+    <button class="mbtn" id="up">▲</button>
+    <button class="mbtn" id="down">▼</button>
+    <button class="mbtn" id="left">◀</button>
+    <button class="mbtn" id="right">▶</button>
 </div>
-
 
 <script type="module">
 
-/* =========================================================
-   THREE.JS
-========================================================= */
-
-import * as THREE from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
-
-import {GLTFLoader} from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
-
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+import {GLTFLoader} from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
 
 /* =========================================================
-   场景
+   用户系统与数据持久化逻辑 (AUTH & STORAGE)
 ========================================================= */
 
-const game =
-    document.getElementById("game");
-
-const scene =
-    new THREE.Scene();
-
-scene.background =
-    new THREE.Color(0x91c9e5);
-
-scene.fog =
-    new THREE.FogExp2(
-        0x91c9e5,
-        .0024
-    );
-
-
-/* =========================================================
-   摄像机
-========================================================= */
-
-const camera =
-    new THREE.PerspectiveCamera(
-        65,
-        innerWidth / innerHeight,
-        .1,
-        1200
-    );
-
-camera.position.set(
-    0,
-    6,
-    12
-);
-
-
-/* =========================================================
-   渲染器
-========================================================= */
-
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias:true,
-        powerPreference:"high-performance"
-    });
-
-renderer.setSize(
-    innerWidth,
-    innerHeight
-);
-
-renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
-);
-
-renderer.shadowMap.enabled=true;
-
-renderer.shadowMap.type =
-    THREE.PCFSoftShadowMap;
-
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
-
-renderer.toneMapping =
-    THREE.ACESFilmicToneMapping;
-
-renderer.toneMappingExposure=1.15;
-
-game.appendChild(
-    renderer.domElement
-);
-
-
-/* =========================================================
-   灯光
-========================================================= */
-
-const hemisphere =
-    new THREE.HemisphereLight(
-        0xd9f3ff,
-        0x405f35,
-        1.8
-    );
-
-scene.add(hemisphere);
-
-
-const sun =
-    new THREE.DirectionalLight(
-        0xfff0c7,
-        3
-    );
-
-sun.position.set(
-    100,
-    150,
-    80
-);
-
-sun.castShadow=true;
-
-sun.shadow.mapSize.width=2048;
-sun.shadow.mapSize.height=2048;
-
-sun.shadow.camera.left=-250;
-sun.shadow.camera.right=250;
-sun.shadow.camera.top=250;
-sun.shadow.camera.bottom=-250;
-
-scene.add(sun);
-
-
-/* =========================================================
-   世界
-========================================================= */
-
-const world =
-    new THREE.Group();
-
-scene.add(world);
-
-
-/* =========================================================
-   地形
-========================================================= */
-
-const terrainGeometry =
-    new THREE.PlaneGeometry(
-        500,
-        500,
-        80,
-        80
-    );
-
-const terrainPosition =
-    terrainGeometry.attributes.position;
-
-
-for(
-    let i=0;
-    i<terrainPosition.count;
-    i++
-){
-
-    const x =
-        terrainPosition.getX(i);
-
-    const y =
-        terrainPosition.getY(i);
-
-
-    const height =
-        Math.sin(x*.035)*1.5+
-        Math.cos(y*.045)*1.2+
-        Math.sin(
-            (x+y)*.018
-        )*2;
-
-
-    terrainPosition.setZ(
-        i,
-        height
-    );
-}
-
-terrainGeometry.computeVertexNormals();
-
-
-const terrain =
-    new THREE.Mesh(
-        terrainGeometry,
-        new THREE.MeshStandardMaterial({
-            color:0x477f3d,
-            roughness:1
-        })
-    );
-
-terrain.rotation.x=
-    -Math.PI/2;
-
-terrain.receiveShadow=true;
-
-world.add(terrain);
-
-
-/* =========================================================
-   道路
-========================================================= */
-
-function road(
-    x,
-    z,
-    width,
-    length,
-    rotation=0
-){
-
-    const mesh =
-        new THREE.Mesh(
-            new THREE.PlaneGeometry(
-                width,
-                length
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0x897154,
-                roughness:1
-            })
-        );
-
-    mesh.rotation.x=
-        -Math.PI/2;
-
-    mesh.rotation.z=
-        rotation;
-
-    mesh.position.set(
-        x,
-        .06,
-        z
-    );
-
-    mesh.receiveShadow=true;
-
-    world.add(mesh);
-}
-
-road(
-    0,
-    0,
-    7,
-    300
-);
-
-road(
-    65,
-    -30,
-    5,
-    180,
-    Math.PI/2
-);
-
-
-/* =========================================================
-   河流
-========================================================= */
-
-const river =
-    new THREE.Mesh(
-        new THREE.PlaneGeometry(
-            35,
-            500,
-            1,
-            20
-        ),
-        new THREE.MeshPhysicalMaterial({
-            color:0x398ab7,
-            transparent:true,
-            opacity:.82,
-            roughness:.12,
-            metalness:.05
-        })
-    );
-
-river.rotation.x=
-    -Math.PI/2;
-
-river.position.set(
-    -85,
-    .18,
-    0
-);
-
-world.add(river);
-
-
-/* =========================================================
-   房屋
-========================================================= */
-
-function createHouse(
-    x,
-    z,
-    scale=1
-){
-
-    const house =
-        new THREE.Group();
-
-    house.position.set(
-        x,
-        0,
-        z
-    );
-
-    house.scale.setScalar(
-        scale
-    );
-
-
-    const wall =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                12,
-                6,
-                9
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0xd7bc8d,
-                roughness:.85
-            })
-        );
-
-    wall.position.y=3;
-
-    wall.castShadow=true;
-    wall.receiveShadow=true;
-
-    house.add(wall);
-
-
-    const roof =
-        new THREE.Mesh(
-            new THREE.ConeGeometry(
-                8,
-                5,
-                4
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0x704438,
-                roughness:.9
-            })
-        );
-
-    roof.position.y=8;
-
-    roof.rotation.y=
-        Math.PI/4;
-
-    roof.castShadow=true;
-
-    house.add(roof);
-
-
-    const door =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                2,
-                3.7,
-                .25
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0x583b2b
-            })
-        );
-
-    door.position.set(
-        0,
-        1.85,
-        4.55
-    );
-
-    house.add(door);
-
-
-    for(
-        const side of [-1,1]
-    ){
-
-        const win =
-            new THREE.Mesh(
-                new THREE.BoxGeometry(
-                    2.2,
-                    1.6,
-                    .2
-                ),
-                new THREE.MeshStandardMaterial({
-                    color:0x9ed9e8,
-                    roughness:.2,
-                    metalness:.1
-                })
-            );
-
-        win.position.set(
-            side*3.5,
-            3.4,
-            4.55
-        );
-
-        house.add(win);
-    }
-
-
-    const chimney =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                1.2,
-                3,
-                1.2
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0x704a38
-            })
-        );
-
-    chimney.position.set(
-        3,
-        9,
-        -1
-    );
-
-    chimney.castShadow=true;
-
-    house.add(chimney);
-
-    world.add(house);
-}
-
-
-createHouse(
-    25,
-    -30,
-    1
-);
-
-createHouse(
-    55,
-    20,
-    .8
-);
-
-
-/* =========================================================
-   农田
-========================================================= */
-
-const farm =
-    new THREE.Group();
-
-farm.position.set(
-    30,
-    .15,
-    25
-);
-
-world.add(farm);
-
-
-const soil =
-    new THREE.Mesh(
-        new THREE.BoxGeometry(
-            30,
-            .35,
-            22
-        ),
-        new THREE.MeshStandardMaterial({
-            color:0x65442c,
-            roughness:1
-        })
-    );
-
-soil.receiveShadow=true;
-
-farm.add(soil);
-
-
-const cropSpots=[];
-
-
-for(
-    let x=-12;
-    x<=12;
-    x+=4
-){
-
-    for(
-        let z=-8;
-        z<=8;
-        z+=4
-    ){
-
-        const spot =
-            new THREE.Mesh(
-                new THREE.BoxGeometry(
-                    2.5,
-                    .08,
-                    2.5
-                ),
-                new THREE.MeshStandardMaterial({
-                    color:0x4d321f
-                })
-            );
-
-        spot.position.set(
-            x,
-            .23,
-            z
-        );
-
-        farm.add(spot);
-
-        cropSpots.push({
-            mesh:spot,
-            planted:false,
-            crop:null,
-            age:0
-        });
+let currentUser = null;
+let isAuthModeLogin = true;
+
+// 从 localStorage 获取本地用户数据库
+function getUsersDB() {
+    try {
+        return JSON.parse(localStorage.getItem("ruralLife_usersDB")) || {};
+    } catch {
+        return {};
     }
 }
 
-
-/* =========================================================
-   树木
-========================================================= */
-
-const trees=[];
-
-
-function createTree(
-    x,
-    z
-){
-
-    const tree =
-        new THREE.Group();
-
-    tree.position.set(
-        x,
-        0,
-        z
-    );
-
-
-    const trunk =
-        new THREE.Mesh(
-            new THREE.CylinderGeometry(
-                .55,
-                .8,
-                5,
-                12
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0x67442d,
-                roughness:1
-            })
-        );
-
-    trunk.position.y=2.5;
-
-    trunk.castShadow=true;
-
-    tree.add(trunk);
-
-
-    const leavesMaterial =
-        new THREE.MeshStandardMaterial({
-            color:0x2f6d32,
-            roughness:1
-        });
-
-
-    const leaves =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                3.5,
-                16,
-                12
-            ),
-            leavesMaterial
-        );
-
-    leaves.position.y=6;
-
-    leaves.scale.y=.9;
-
-    leaves.castShadow=true;
-
-    tree.add(leaves);
-
-
-    const leaves2 =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                2.6,
-                16,
-                12
-            ),
-            leavesMaterial
-        );
-
-    leaves2.position.set(
-        2,
-        7,
-        .5
-    );
-
-    leaves2.castShadow=true;
-
-    tree.add(leaves2);
-
-
-    world.add(tree);
-
-    trees.push(tree);
+function saveUsersDB(db) {
+    localStorage.setItem("ruralLife_usersDB", JSON.stringify(db));
 }
 
+// 默认新玩家存档模板
+function createDefaultSaveData() {
+    return {
+        gold: 500,
+        stamina: 100,
+        wheat: 0,
+        wood: 0,
+        carrot: 0,
+        x: 0,
+        z: 10,
+        gameTime: 8
+    };
+}
 
-for(
-    let i=0;
-    i<45;
-    i++
-){
+let data = createDefaultSaveData();
 
-    const x =
-        (Math.random()-.5)*400;
+// 界面组件
+const authModal = document.getElementById("authModal");
+const authTitle = document.getElementById("authTitle");
+const authError = document.getElementById("authError");
+const usernameInput = document.getElementById("usernameInput");
+const passwordInput = document.getElementById("passwordInput");
+const authBtn = document.getElementById("authBtn");
+const authSwitch = document.getElementById("authSwitch");
+const logoutBtn = document.getElementById("logoutBtn");
 
-    const z =
-        (Math.random()-.5)*400;
-
-
-    if(
-        Math.abs(x)<45 &&
-        Math.abs(z)<55
-    ){
-        continue;
+// 切换 登录/注册 模式
+authSwitch.onclick = () => {
+    isAuthModeLogin = !isAuthModeLogin;
+    authError.textContent = "";
+    if (isAuthModeLogin) {
+        authTitle.textContent = "🌾 登录游戏";
+        authBtn.textContent = "登录";
+        authSwitch.textContent = "还没有账号？点击注册";
+    } else {
+        authTitle.textContent = "📝 注册账号";
+        authBtn.textContent = "注册并登录";
+        authSwitch.textContent = "已有账号？点击登录";
     }
-
-    createTree(
-        x,
-        z
-    );
-}
-
-
-/* =========================================================
-   动物
-========================================================= */
-
-function createAnimal(
-    type,
-    x,
-    z
-){
-
-    const animal =
-        new THREE.Group();
-
-    animal.position.set(
-        x,
-        .7,
-        z
-    );
-
-
-    let color=0xffffff;
-
-    if(type==="cow")
-        color=0x76503a;
-
-    if(type==="chicken")
-        color=0xf1eddb;
-
-
-    const body =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                1.2,
-                18,
-                12
-            ),
-            new THREE.MeshStandardMaterial({
-                color:color,
-                roughness:.9
-            })
-        );
-
-    body.scale.set(
-        1.5,
-        .9,
-        .9
-    );
-
-    body.castShadow=true;
-
-    animal.add(body);
-
-
-    const head =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                .75,
-                16,
-                12
-            ),
-            new THREE.MeshStandardMaterial({
-                color:color,
-                roughness:.9
-            })
-        );
-
-    head.position.set(
-        1.35,
-        .2,
-        0
-    );
-
-    head.castShadow=true;
-
-    animal.add(head);
-
-
-    for(
-        const lx of [-.8,.8]
-    ){
-
-        for(
-            const lz of [-.5,.5]
-        ){
-
-            const leg =
-                new THREE.Mesh(
-                    new THREE.CylinderGeometry(
-                        .13,
-                        .18,
-                        1.2,
-                        8
-                    ),
-                    new THREE.MeshStandardMaterial({
-                        color:
-                            type==="chicken"
-                            ?0xd8a24c
-                            :0x49352b
-                    })
-                );
-
-            leg.position.set(
-                lx,
-                -.8,
-                lz
-            );
-
-            animal.add(leg);
-        }
-    }
-
-
-    world.add(animal);
-
-    return animal;
-}
-
-
-createAnimal(
-    "cow",
-    15,
-    10
-);
-
-createAnimal(
-    "cow",
-    10,
-    15
-);
-
-createAnimal(
-    "sheep",
-    -20,
-    10
-);
-
-createAnimal(
-    "chicken",
-    15,
-    -5
-);
-
-createAnimal(
-    "chicken",
-    20,
-    -8
-);
-
-
-/* =========================================================
-   玩家
-========================================================= */
-
-const player =
-    new THREE.Group();
-
-player.position.set(
-    0,
-    0,
-    10
-);
-
-scene.add(player);
-
-
-function createPlayer(){
-
-    const group =
-        new THREE.Group();
-
-
-    const body =
-        new THREE.Mesh(
-            new THREE.CapsuleGeometry(
-                .45,
-                1.05,
-                8,
-                16
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0x356aa8,
-                roughness:.75
-            })
-        );
-
-    body.position.y=1.15;
-
-    body.castShadow=true;
-
-    group.add(body);
-
-
-    const head =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                .38,
-                20,
-                16
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0xf0bd91,
-                roughness:.8
-            })
-        );
-
-    head.position.y=2.05;
-
-    head.castShadow=true;
-
-    group.add(head);
-
-
-    const hair =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                .4,
-                20,
-                16
-            ),
-            new THREE.MeshStandardMaterial({
-                color:0x29211e,
-                roughness:.9
-            })
-        );
-
-    hair.scale.y=.55;
-
-    hair.position.y=2.32;
-
-    group.add(hair);
-
-
-    for(
-        const x of [-.2,.2]
-    ){
-
-        const leg =
-            new THREE.Mesh(
-                new THREE.CylinderGeometry(
-                    .13,
-                    .15,
-                    .9,
-                    10
-                ),
-                new THREE.MeshStandardMaterial({
-                    color:0x303a49
-                })
-            );
-
-        leg.position.set(
-            x,
-            .45,
-            0
-        );
-
-        leg.castShadow=true;
-
-        group.add(leg);
-    }
-
-
-    return group;
-}
-
-
-const fallbackPlayer =
-    createPlayer();
-
-player.add(
-    fallbackPlayer
-);
-
-
-/* =========================================================
-   后台加载真实人物
-========================================================= */
-
-function loadRealPlayerInBackground(){
-
-    const loader =
-        new GLTFLoader();
-
-    loader.load(
-        "./models/player.glb",
-
-        gltf=>{
-
-            const model =
-                gltf.scene;
-
-            model.traverse(
-                object=>{
-
-                    if(object.isMesh){
-
-                        object.castShadow=true;
-                        object.receiveShadow=true;
-
-                    }
-                }
-            );
-
-
-            model.scale.setScalar(
-                .9
-            );
-
-            player.remove(
-                fallbackPlayer
-            );
-
-            player.add(
-                model
-            );
-
-
-            showMessage(
-                "👤 已加载真实 3D 人物"
-            );
-        },
-
-        undefined,
-
-        error=>{
-
-            console.log(
-                "player.glb 不存在，使用内置人物。"
-            );
-        }
-    );
-}
-
-loadRealPlayerInBackground();
-
-
-/* =========================================================
-   玩家数据
-========================================================= */
-
-let data={
-    gold:500,
-    stamina:100,
-    wheat:0,
-    wood:0,
-    carrot:0,
-    x:0,
-    z:10,
-    gameTime:8
 };
 
-
-/* =========================================================
-   保存与加载
-========================================================= */
-
-function saveGame(){
-
-    data.x =
-        player.position.x;
-
-    data.z =
-        player.position.z;
-
-
-    localStorage.setItem(
-        "ruralLife3D_save",
-        JSON.stringify(data)
-    );
-
-
-    showMessage(
-        "💾 游戏已保存"
-    );
-}
-
-
-function loadGame(){
-
-    try{
-
-        const saved =
-            localStorage.getItem(
-                "ruralLife3D_save"
-            );
-
-        if(!saved)
-            return;
-
-
-        data=Object.assign(
-            data,
-            JSON.parse(saved)
-        );
-
-
-        player.position.x=data.x;
-        player.position.z=data.z;
-
-    }catch(error){
-
-        console.log(error);
-    }
-}
-
-loadGame();
-
-
-/* =========================================================
-   UI
-========================================================= */
-
-function updateUI(){
-
-    document.getElementById(
-        "gold"
-    ).textContent=data.gold;
-
-
-    document.getElementById(
-        "stamina"
-    ).textContent=
-        Math.floor(
-            data.stamina
-        );
-
-
-    document.getElementById(
-        "wheat"
-    ).textContent=data.wheat;
-
-
-    document.getElementById(
-        "wood"
-    ).textContent=data.wood;
-
-
-    document.getElementById(
-        "carrot"
-    ).textContent=data.carrot;
-
-
-    document.getElementById(
-        "staminaBar"
-    ).style.width=
-        Math.max(
-            0,
-            data.stamina
-        )+"%";
-
-
-    const hour =
-        Math.floor(
-            data.gameTime
-        );
-
-    const minute =
-        Math.floor(
-            (data.gameTime-hour)*60
-        );
-
-
-    document.getElementById(
-        "time"
-    ).textContent=
-        String(hour).padStart(2,"0")
-        +
-        ":"
-        +
-        String(minute).padStart(2,"0");
-}
-
-
-/* =========================================================
-   消息
-========================================================= */
-
-let messageTimer;
-
-
-function showMessage(
-    text
-){
-
-    const element =
-        document.getElementById(
-            "message"
-        );
-
-
-    element.textContent=text;
-
-    element.style.opacity="1";
-
-
-    clearTimeout(
-        messageTimer
-    );
-
-
-    messageTimer=
-        setTimeout(
-            ()=>{
-                element.style.opacity="0";
-            },
-            1800
-        );
-}
-
-
-/* =========================================================
-   键盘
-========================================================= */
-
-const keys={};
-
-
-window.addEventListener(
-    "keydown",
-    event=>{
-
-        const key =
-            event.key.toLowerCase();
-
-        keys[key]=true;
-
-
-        if(key==="e")
-            interact();
-
-        if(key==="1")
-            plantCrop();
-
-        if(key==="2")
-            chopTree();
-
-        if(key==="3")
-            fishing();
-
-        if(key==="4")
-            shop();
-
-        if(key==="f")
-            saveGame();
-    }
-);
-
-
-window.addEventListener(
-    "keyup",
-    event=>{
-
-        keys[
-            event.key.toLowerCase()
-        ]=false;
-    }
-);
-
-
-/* =========================================================
-   手机与界面按钮交互
-========================================================= */
-
-function mobileControl(
-    id,
-    key
-){
-
-    const button =
-        document.getElementById(id);
-
-
-    button.addEventListener(
-        "touchstart",
-        event=>{
-
-            event.preventDefault();
-
-            keys[key]=true;
-        },
-        {passive:false}
-    );
-
-
-    button.addEventListener(
-        "touchend",
-        event=>{
-
-            event.preventDefault();
-
-            keys[key]=false;
-        },
-        {passive:false}
-    );
-}
-
-
-mobileControl("up","w");
-mobileControl("down","s");
-mobileControl("left","a");
-mobileControl("right","d");
-
-// 绑定右下角 UI 操作按钮
-document.getElementById("plantBtn").onclick = () => plantCrop();
-document.getElementById("interactBtn").onclick = () => interact();
-document.getElementById("saveBtn").onclick = () => saveGame();
-
-
-/* =========================================================
-   鼠标镜头
-========================================================= */
-
-let cameraYaw=0;
-let cameraPitch=.38;
-
-let dragging=false;
-
-let mouseX=0;
-let mouseY=0;
-
-
-renderer.domElement.addEventListener(
-    "mousedown",
-    event=>{
-
-        dragging=true;
-
-        mouseX=event.clientX;
-        mouseY=event.clientY;
-    }
-);
-
-
-window.addEventListener(
-    "mouseup",
-    ()=>{
-        dragging=false;
-    }
-);
-
-
-window.addEventListener(
-    "mousemove",
-    event=>{
-
-        if(!dragging)
-            return;
-
-
-        const dx =
-            event.clientX-mouseX;
-
-        const dy =
-            event.clientY-mouseY;
-
-
-        cameraYaw -=
-            dx*.005;
-
-
-        cameraPitch -=
-            dy*.004;
-
-
-        cameraPitch=
-            THREE.MathUtils.clamp(
-                cameraPitch,
-                .15,
-                1.1
-            );
-
-
-        mouseX=event.clientX;
-        mouseY=event.clientY;
-    }
-);
-
-
-/* =========================================================
-   玩家移动
-========================================================= */
-
-const clock =
-    new THREE.Clock();
-
-
-function updatePlayer(
-    delta
-){
-
-    let dx=0;
-    let dz=0;
-
-
-    if(keys.w)
-        dz-=1;
-
-    if(keys.s)
-        dz+=1;
-
-    if(keys.a)
-        dx-=1;
-
-    if(keys.d)
-        dx+=1;
-
-
-    if(
-        dx===0 &&
-        dz===0
-    ){
+// 提交 登录/注册
+authBtn.onclick = () => {
+    const user = usernameInput.value.trim();
+    const pwd = passwordInput.value.trim();
+
+    if (!user || !pwd) {
+        authError.textContent = "用户名和密码不能为空！";
         return;
     }
 
+    const db = getUsersDB();
 
-    const length =
-        Math.hypot(
-            dx,
-            dz
-        );
-
-
-    dx/=length;
-    dz/=length;
-
-
-    // 计算相对于摄像机方向的视角移动
-    const sin = Math.sin(cameraYaw);
-    const cos = Math.cos(cameraYaw);
-
-    const moveX = dx * cos - dz * sin;
-    const moveZ = dx * sin + dz * cos;
-
-    const speed=8;
-
-
-    player.position.x +=
-        moveX*speed*delta;
-
-
-    player.position.z +=
-        moveZ*speed*delta;
-
-
-    player.rotation.y =
-        Math.atan2(
-            moveX,
-            moveZ
-        );
-
-
-    data.stamina=
-        Math.max(
-            0,
-            data.stamina-
-            delta*.6
-        );
-}
-
-
-/* =========================================================
-   第三人称镜头
-========================================================= */
-
-function updateCamera(){
-
-    const distance=10;
-
-
-    const horizontal =
-        Math.cos(
-            cameraPitch
-        )*distance;
-
-
-    const height =
-        Math.sin(
-            cameraPitch
-        )*distance;
-
-
-    const offset =
-        new THREE.Vector3(
-            Math.sin(cameraYaw)*
-            horizontal,
-
-            height,
-
-            Math.cos(cameraYaw)*
-            horizontal
-        );
-
-
-    const target =
-        player.position.clone();
-
-
-    target.y+=1.2;
-
-
-    const desired =
-        target.clone().add(
-            offset
-        );
-
-
-    camera.position.lerp(
-        desired,
-        .1
-    );
-
-
-    camera.lookAt(
-        target
-    );
-}
-
-
-/* =========================================================
-   种植
-========================================================= */
-
-function plantCrop(){
-
-    if(data.stamina<5){
-
-        showMessage(
-            "⚡ 体力不足"
-        );
-
-        return;
-    }
-
-
-    let nearest=null;
-    let distance=999;
-
-
-    for(
-        const spot of cropSpots
-    ){
-
-        const position =
-            new THREE.Vector3();
-
-
-        spot.mesh.getWorldPosition(
-            position
-        );
-
-
-        const d =
-            player.position.distanceTo(
-                position
-            );
-
-
-        if(
-            d<distance &&
-            !spot.planted
-        ){
-
-            distance=d;
-            nearest=spot;
+    if (isAuthModeLogin) {
+        // ---- 登录逻辑 ----
+        if (!db[user]) {
+            authError.textContent = "账号不存在！";
+            return;
         }
+        if (db[user].password !== pwd) {
+            authError.textContent = "密码错误！";
+            return;
+        }
+
+        // 登录成功
+        currentUser = user;
+        data = db[user].saveData || createDefaultSaveData();
+        onLoginSuccess();
+
+    } else {
+        // ---- 注册逻辑 ----
+        if (db[user]) {
+            authError.textContent = "用户名已被注册！";
+            return;
+        }
+
+        db[user] = {
+            password: pwd,
+            saveData: createDefaultSaveData()
+        };
+        saveUsersDB(db);
+
+        // 注册并登录
+        currentUser = user;
+        data = db[user].saveData;
+        onLoginSuccess();
     }
+};
 
-
-    if(
-        !nearest ||
-        distance>7
-    ){
-
-        showMessage(
-            "🌱 请走到农田附近"
-        );
-
-        return;
+function onLoginSuccess() {
+    authModal.style.display = "none";
+    document.getElementById("currentUser").textContent = currentUser;
+    
+    // 重置角色位置
+    if (player) {
+        player.position.x = data.x;
+        player.position.z = data.z;
     }
-
-
-    nearest.planted=true;
-
-    nearest.age=0;
-
-
-    const crop =
-        new THREE.Group();
-
-
-    for(
-        let i=0;
-        i<5;
-        i++
-    ){
-
-        const stem =
-            new THREE.Mesh(
-                new THREE.CylinderGeometry(
-                    .035,
-                    .055,
-                    .8,
-                    5
-                ),
-                new THREE.MeshStandardMaterial({
-                    color:0x69a94a
-                })
-            );
-
-
-        stem.position.set(
-            (Math.random()-.5)*.8,
-            .45,
-            (Math.random()-.5)*.8
-        );
-
-
-        crop.add(stem);
-    }
-
-
-    crop.position.copy(
-        nearest.mesh.position
-    );
-
-    crop.scale.set(0.2, 0.2, 0.2); // 刚种下时微小
-
-
-    nearest.mesh.parent.add(
-        crop
-    );
-
-
-    nearest.crop=crop;
-
-
-    data.stamina-=5;
-
-
-    showMessage(
-        "🌱 小麦已经种下"
-    );
-
-
+    
+    localStorage.setItem("ruralLife_sessionUser", currentUser);
+    showMessage(`welcome 👋 欢迎回来，${currentUser}！`);
     updateUI();
 }
 
+// 登出
+logoutBtn.onclick = () => {
+    saveGame(); // 登出前自动保存
+    currentUser = null;
+    localStorage.removeItem("ruralLife_sessionUser");
+    
+    usernameInput.value = "";
+    passwordInput.value = "";
+    authError.textContent = "";
+    authModal.style.display = "flex";
+};
+
+// 检查上一次会话
+function checkSession() {
+    const sessionUser = localStorage.getItem("ruralLife_sessionUser");
+    if (sessionUser) {
+        const db = getUsersDB();
+        if (db[sessionUser]) {
+            currentUser = sessionUser;
+            data = db[sessionUser].saveData || createDefaultSaveData();
+            authModal.style.display = "none";
+            document.getElementById("currentUser").textContent = currentUser;
+            return;
+        }
+    }
+    authModal.style.display = "flex";
+}
+
+// 保存游戏存档到当前用户
+function saveGame() {
+    if (!currentUser) return;
+
+    data.x = player.position.x;
+    data.z = player.position.z;
+
+    const db = getUsersDB();
+    if (db[currentUser]) {
+        db[currentUser].saveData = data;
+        saveUsersDB(db);
+        showMessage("💾 游戏数据已保存");
+    }
+}
 
 /* =========================================================
-   作物生长逻辑
+   THREE.JS 场景搭建
 ========================================================= */
+
+const game = document.getElementById("game");
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x91c9e5);
+scene.fog = new THREE.FogExp2(0x91c9e5, .0024);
+
+const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .1, 1200);
+camera.position.set(0, 6, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+game.appendChild(renderer.domElement);
+
+const hemisphere = new THREE.HemisphereLight(0xd9f3ff, 0x405f35, 1.8);
+scene.add(hemisphere);
+
+const sun = new THREE.DirectionalLight(0xfff0c7, 3);
+sun.position.set(100, 150, 80);
+sun.castShadow = true;
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
+sun.shadow.camera.left = -250;
+sun.shadow.camera.right = 250;
+sun.shadow.camera.top = 250;
+sun.shadow.camera.bottom = -250;
+scene.add(sun);
+
+const world = new THREE.Group();
+scene.add(world);
+
+// 地形
+const terrainGeometry = new THREE.PlaneGeometry(500, 500, 80, 80);
+const terrainPosition = terrainGeometry.attributes.position;
+for (let i = 0; i < terrainPosition.count; i++) {
+    const x = terrainPosition.getX(i);
+    const y = terrainPosition.getY(i);
+    const height = Math.sin(x * .035) * 1.5 + Math.cos(y * .045) * 1.2 + Math.sin((x + y) * .018) * 2;
+    terrainPosition.setZ(i, height);
+}
+terrainGeometry.computeVertexNormals();
+
+const terrain = new THREE.Mesh(
+    terrainGeometry,
+    new THREE.MeshStandardMaterial({ color: 0x477f3d, roughness: 1 })
+);
+terrain.rotation.x = -Math.PI / 2;
+terrain.receiveShadow = true;
+world.add(terrain);
+
+// 道路与河流
+function road(x, z, width, length, rotation = 0) {
+    const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, length),
+        new THREE.MeshStandardMaterial({ color: 0x897154, roughness: 1 })
+    );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.rotation.z = rotation;
+    mesh.position.set(x, .06, z);
+    mesh.receiveShadow = true;
+    world.add(mesh);
+}
+road(0, 0, 7, 300);
+road(65, -30, 5, 180, Math.PI / 2);
+
+const river = new THREE.Mesh(
+    new THREE.PlaneGeometry(35, 500, 1, 20),
+    new THREE.MeshPhysicalMaterial({ color: 0x398ab7, transparent: true, opacity: .82, roughness: .12, metalness: .05 })
+);
+river.rotation.x = -Math.PI / 2;
+river.position.set(-85, .18, 0);
+world.add(river);
+
+// 房屋创建
+function createHouse(x, z, scale = 1) {
+    const house = new THREE.Group();
+    house.position.set(x, 0, z);
+    house.scale.setScalar(scale);
+
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(12, 6, 9), new THREE.MeshStandardMaterial({ color: 0xd7bc8d, roughness: .85 }));
+    wall.position.y = 3;
+    wall.castShadow = true; wall.receiveShadow = true;
+    house.add(wall);
+
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 5, 4), new THREE.MeshStandardMaterial({ color: 0x704438, roughness: .9 }));
+    roof.position.y = 8; roof.rotation.y = Math.PI / 4; roof.castShadow = true;
+    house.add(roof);
+
+    world.add(house);
+}
+createHouse(25, -30, 1);
+createHouse(55, 20, .8);
+
+// 农田系统
+const farm = new THREE.Group();
+farm.position.set(30, .15, 25);
+world.add(farm);
+
+const soil = new THREE.Mesh(new THREE.BoxGeometry(30, .35, 22), new THREE.MeshStandardMaterial({ color: 0x65442c, roughness: 1 }));
+soil.receiveShadow = true;
+farm.add(soil);
+
+const cropSpots = [];
+for (let x = -12; x <= 12; x += 4) {
+    for (let z = -8; z <= 8; z += 4) {
+        const spot = new THREE.Mesh(new THREE.BoxGeometry(2.5, .08, 2.5), new THREE.MeshStandardMaterial({ color: 0x4d321f }));
+        spot.position.set(x, .23, z);
+        farm.add(spot);
+        cropSpots.push({ mesh: spot, planted: false, crop: null, age: 0 });
+    }
+}
+
+// 树木
+const trees = [];
+function createTree(x, z) {
+    const tree = new THREE.Group();
+    tree.position.set(x, 0, z);
+
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.55, .8, 5, 12), new THREE.MeshStandardMaterial({ color: 0x67442d, roughness: 1 }));
+    trunk.position.y = 2.5; trunk.castShadow = true;
+    tree.add(trunk);
+
+    const leaves = new THREE.Mesh(new THREE.SphereGeometry(3.5, 16, 12), new THREE.MeshStandardMaterial({ color: 0x2f6d32, roughness: 1 }));
+    leaves.position.y = 6; leaves.castShadow = true;
+    tree.add(leaves);
+
+    world.add(tree);
+    trees.push(tree);
+}
+
+for (let i = 0; i < 40; i++) {
+    const x = (Math.random() - .5) * 400;
+    const z = (Math.random() - .5) * 400;
+    if (Math.abs(x) < 45 && Math.abs(z) < 55) continue;
+    createTree(x, z);
+}
+
+// 玩家角色
+const player = new THREE.Group();
+player.position.set(data.x, 0, data.z);
+scene.add(player);
+
+function createPlayer() {
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(.45, 1.05, 8, 16), new THREE.MeshStandardMaterial({ color: 0x356aa8 }));
+    body.position.y = 1.15; body.castShadow = true;
+    group.add(body);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.38, 20, 16), new THREE.MeshStandardMaterial({ color: 0xf0bd91 }));
+    head.position.y = 2.05; head.castShadow = true;
+    group.add(head);
+
+    return group;
+}
+player.add(createPlayer());
+
+/* =========================================================
+   UI 与逻辑交互
+========================================================= */
+
+function updateUI() {
+    document.getElementById("gold").textContent = data.gold;
+    document.getElementById("stamina").textContent = Math.floor(data.stamina);
+    document.getElementById("wheat").textContent = data.wheat;
+    document.getElementById("wood").textContent = data.wood;
+    document.getElementById("carrot").textContent = data.carrot;
+    document.getElementById("staminaBar").style.width = Math.max(0, data.stamina) + "%";
+
+    const hour = Math.floor(data.gameTime);
+    const minute = Math.floor((data.gameTime - hour) * 60);
+    document.getElementById("time").textContent = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+let messageTimer;
+function showMessage(text) {
+    const element = document.getElementById("message");
+    element.textContent = text;
+    element.style.opacity = "1";
+    clearTimeout(messageTimer);
+    messageTimer = setTimeout(() => { element.style.opacity = "0"; }, 1800);
+}
+
+/* =========================================================
+   按键与移动控制
+========================================================= */
+
+const keys = {};
+window.addEventListener("keydown", e => {
+    if (!currentUser) return; // 未登录禁止操作
+    const key = e.key.toLowerCase();
+    keys[key] = true;
+    if (key === "e") interact();
+    if (key === "1") plantCrop();
+    if (key === "2") chopTree();
+    if (key === "3") fishing();
+    if (key === "4") shop();
+    if (key === "f") saveGame();
+});
+window.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+
+let cameraYaw = 0, cameraPitch = .38, dragging = false, mouseX = 0, mouseY = 0;
+renderer.domElement.addEventListener("mousedown", e => { dragging = true; mouseX = e.clientX; mouseY = e.clientY; });
+window.addEventListener("mouseup", () => { dragging = false; });
+window.addEventListener("mousemove", e => {
+    if (!dragging || !currentUser) return;
+    cameraYaw -= (e.clientX - mouseX) * .005;
+    cameraPitch = THREE.MathUtils.clamp(cameraPitch - (e.clientY - mouseY) * .004, .15, 1.1);
+    mouseX = e.clientX; mouseY = e.clientY;
+});
+
+const clock = new THREE.Clock();
+
+function updatePlayer(delta) {
+    if (!currentUser) return; // 登录框显示时禁止移动
+
+    let dx = 0, dz = 0;
+    if (keys.w) dz -= 1;
+    if (keys.s) dz += 1;
+    if (keys.a) dx -= 1;
+    if (keys.d) dx += 1;
+
+    if (dx === 0 && dz === 0) return;
+
+    const len = Math.hypot(dx, dz);
+    dx /= len; dz /= len;
+
+    const sin = Math.sin(cameraYaw), cos = Math.cos(cameraYaw);
+    const moveX = dx * cos - dz * sin;
+    const moveZ = dx * sin + dz * cos;
+    const speed = 8;
+
+    player.position.x += moveX * speed * delta;
+    player.position.z += moveZ * speed * delta;
+    player.rotation.y = Math.atan2(moveX, moveZ);
+
+    data.stamina = Math.max(0, data.stamina - delta * .6);
+}
+
+function updateCamera() {
+    const dist = 10;
+    const offset = new THREE.Vector3(
+        Math.sin(cameraYaw) * Math.cos(cameraPitch) * dist,
+        Math.sin(cameraPitch) * dist,
+        Math.cos(cameraYaw) * Math.cos(cameraPitch) * dist
+    );
+    const target = player.position.clone().add(new THREE.Vector3(0, 1.2, 0));
+    camera.position.lerp(target.clone().add(offset), .1);
+    camera.lookAt(target);
+}
+
+/* =========================================================
+   游戏互动动作
+========================================================= */
+
+function plantCrop() {
+    if (data.stamina < 5) { showMessage("⚡ 体力不足"); return; }
+    let nearest = null, distance = 999;
+    for (const spot of cropSpots) {
+        const pos = new THREE.Vector3();
+        spot.mesh.getWorldPosition(pos);
+        const d = player.position.distanceTo(pos);
+        if (d < distance && !spot.planted) { distance = d; nearest = spot; }
+    }
+    if (!nearest || distance > 7) { showMessage("🌱 请走到农田附近"); return; }
+
+    nearest.planted = true; nearest.age = 0;
+    const crop = new THREE.Group();
+    for (let i = 0; i < 5; i++) {
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(.035, .055, .8, 5), new THREE.MeshStandardMaterial({ color: 0x69a94a }));
+        stem.position.set((Math.random() - .5) * .8, .45, (Math.random() - .5) * .8);
+        crop.add(stem);
+    }
+    crop.position.copy(nearest.mesh.position);
+    crop.scale.set(0.2, 0.2, 0.2);
+    nearest.mesh.parent.add(crop);
+    nearest.crop = crop;
+    data.stamina -= 5;
+    showMessage("🌱 小麦已经种下");
+    updateUI();
+}
 
 function updateCrops(delta) {
     for (const spot of cropSpots) {
         if (spot.planted && spot.crop && spot.age < 1) {
-            spot.age += delta * 0.05; // 生长速度
-
-            // 动态伸长与变黄（成熟）
+            spot.age += delta * 0.05;
             const scale = THREE.MathUtils.lerp(0.2, 1.2, spot.age);
             spot.crop.scale.set(scale, scale, scale);
-
             if (spot.age >= 1) {
-                spot.crop.traverse(child => {
-                    if (child.isMesh) {
-                        child.material.color.setHex(0xe3b134); // 小麦成熟黄色
-                    }
-                });
+                spot.crop.traverse(c => { if (c.isMesh) c.material.color.setHex(0xe3b134); });
             }
         }
     }
 }
 
-
-/* =========================================================
-   砍树
-========================================================= */
-
-function chopTree(){
-
-    if(data.stamina<10){
-
-        showMessage(
-            "⚡ 体力不足"
-        );
-
-        return;
+function chopTree() {
+    if (data.stamina < 10) { showMessage("⚡ 体力不足"); return; }
+    let nearest = null, distance = 999;
+    for (const tree of trees) {
+        const d = player.position.distanceTo(tree.position);
+        if (d < distance && d < 7) { distance = d; nearest = tree; }
     }
-
-
-    let nearest=null;
-    let distance=999;
-
-
-    for(
-        const tree of trees
-    ){
-
-        const d =
-            player.position.distanceTo(
-                tree.position
-            );
-
-
-        if(
-            d<distance &&
-            d<7
-        ){
-
-            distance=d;
-            nearest=tree;
-        }
-    }
-
-
-    if(!nearest){
-
-        showMessage(
-            "🌳 靠近树木"
-        );
-
-        return;
-    }
-
-
-    data.wood+=3;
-
-    data.stamina-=10;
-
-
-    nearest.scale.multiplyScalar(
-        .88
-    );
-
-
-    showMessage(
-        "🪵 获得 3 木材"
-    );
-
-
+    if (!nearest) { showMessage("🌳 靠近树木"); return; }
+    data.wood += 3; data.stamina -= 10;
+    nearest.scale.multiplyScalar(.88);
+    showMessage("🪵 获得 3 木材");
     updateUI();
 }
 
-
-/* =========================================================
-   钓鱼
-========================================================= */
-
-function fishing(){
-
-    if(data.stamina<8){
-
-        showMessage(
-            "⚡ 体力不足"
-        );
-
-        return;
-    }
-
-
-    if(
-        Math.abs(
-            player.position.x+85
-        )>25
-    ){
-
-        showMessage(
-            "🎣 请到河边"
-        );
-
-        return;
-    }
-
-
-    data.stamina-=8;
-
-
-    if(
-        Math.random()<.7
-    ){
-
-        const money =
-            20+
-            Math.floor(
-                Math.random()*40
-            );
-
-
-        data.gold+=money;
-
-
-        showMessage(
-            "🐟 钓鱼成功 +"+
-            money+
-            " 金币"
-        );
-
-    }else{
-
-        showMessage(
-            "🎣 没有钓到鱼"
-        );
-    }
-
-
+function fishing() {
+    if (data.stamina < 8) { showMessage("⚡ 体力不足"); return; }
+    if (Math.abs(player.position.x + 85) > 25) { showMessage("🎣 请到河边"); return; }
+    data.stamina -= 8;
+    if (Math.random() < .7) {
+        const money = 20 + Math.floor(Math.random() * 40);
+        data.gold += money;
+        showMessage(`🐟 钓鱼成功 +${money} 金币`);
+    } else { showMessage("🎣 没有钓到鱼"); }
     updateUI();
 }
 
-
-/* =========================================================
-   商店
-========================================================= */
-
-function shop(){
-
-    if(
-        player.position.distanceTo(
-            new THREE.Vector3(
-                25,
-                0,
-                -30
-            )
-        )>14
-    ){
-
-        showMessage(
-            "🏪 请到商店附近"
-        );
-
-        return;
-    }
-
-
-    if(data.wheat>0){
-
-        const money =
-            data.wheat*15;
-
-
-        data.gold+=money;
-
-        data.wheat=0;
-
-
-        showMessage(
-            "🌾 小麦出售 +"+
-            money+
-            " 金币"
-        );
-
-    }else{
-
-        showMessage(
-            "🏪 小麦售价：15金币"
-        );
-    }
-
-
+function shop() {
+    if (player.position.distanceTo(new THREE.Vector3(25, 0, -30)) > 14) { showMessage("🏪 请到商店附近"); return; }
+    if (data.wheat > 0) {
+        const money = data.wheat * 15;
+        data.gold += money; data.wheat = 0;
+        showMessage(`🌾 小麦出售 +${money} 金币`);
+    } else { showMessage("🏪 小麦售价：15金币"); }
     updateUI();
 }
 
-
-/* =========================================================
-   互动（补全核心代码）
-========================================================= */
-
-function interact(){
-
-    if(data.stamina<=0){
-
-        showMessage(
-            "⚡ 体力不足"
-        );
-
-        return;
-    }
-
-    // 1. 优先检测收割成熟作物
-    for(const spot of cropSpots){
-
-        if(spot.planted && spot.age >= 1){
-
+function interact() {
+    if (data.stamina <= 0) { showMessage("⚡ 体力不足"); return; }
+    for (const spot of cropSpots) {
+        if (spot.planted && spot.age >= 1) {
             const pos = new THREE.Vector3();
             spot.mesh.getWorldPosition(pos);
-
-            if(player.position.distanceTo(pos) < 6){
-
-                spot.planted = false;
-                spot.age = 0;
-
-                if(spot.crop){
-                    spot.crop.parent.remove(spot.crop);
-                    spot.crop = null;
-                }
-
-                data.wheat += 2;
-                data.stamina = Math.max(0, data.stamina - 3);
-
-                showMessage("🌾 收割获得 2 小麦");
-                updateUI();
-                return;
+            if (player.position.distanceTo(pos) < 6) {
+                spot.planted = false; spot.age = 0;
+                if (spot.crop) { spot.crop.parent.remove(spot.crop); spot.crop = null; }
+                data.wheat += 2; data.stamina = Math.max(0, data.stamina - 3);
+                showMessage("🌾 收割获得 2 小麦"); updateUI(); return;
             }
         }
     }
-
-    // 2. 检查最近的树木（如果靠得极近）
-    for(const tree of trees){
-
-        if(player.position.distanceTo(tree.position) < 5){
-
-            chopTree();
-            return;
-        }
+    for (const tree of trees) {
+        if (player.position.distanceTo(tree.position) < 5) { chopTree(); return; }
     }
-
-    // 3. 检查河边钓鱼
-    if(Math.abs(player.position.x + 85) <= 25){
-
-        fishing();
-        return;
-    }
-
-    // 4. 检查商店
-    if(player.position.distanceTo(new THREE.Vector3(25, 0, -30)) <= 14){
-
-        shop();
-        return;
-    }
-
+    if (Math.abs(player.position.x + 85) <= 25) { fishing(); return; }
+    if (player.position.distanceTo(new THREE.Vector3(25, 0, -30)) <= 14) { shop(); return; }
     showMessage("🔍 附近没有可互动的目标");
 }
 
-
-/* =========================================================
-   昼夜与时间系统
-========================================================= */
-
-function updateTimeAndEnvironment(delta){
-
-    // 时间流逝 (1 秒实际时间 ≈ 0.05 小时游戏时间)
+function updateTimeAndEnvironment(delta) {
     data.gameTime += delta * 0.05;
-
-    if(data.gameTime >= 24){
+    if (data.gameTime >= 24) {
         data.gameTime -= 24;
-        
-        // 新的一天恢复体力
         data.stamina = Math.min(100, data.stamina + 40);
         showMessage("🌅 新的一天开始了！体力恢复");
     }
-
-    // 太阳周期旋转
     const angle = (data.gameTime / 24) * Math.PI * 2 - Math.PI / 2;
-
     sun.position.x = Math.cos(angle) * 200;
     sun.position.y = Math.sin(angle) * 200;
 
-    // 天空与日光渐变
-    if(data.gameTime > 6 && data.gameTime < 18){
-
-        // 白天
+    if (data.gameTime > 6 && data.gameTime < 18) {
         sun.intensity = THREE.MathUtils.lerp(sun.intensity, 3, 0.02);
         scene.background.setHex(0x91c9e5);
-        scene.fog.color.setHex(0x91c9e5);
-
-    }else if(data.gameTime >= 18 && data.gameTime <= 19){
-
-        // 黄昏
-        sun.intensity = THREE.MathUtils.lerp(sun.intensity, 1, 0.02);
-        scene.background.setHex(0xd67d53);
-        scene.fog.color.setHex(0xd67d53);
-
-    }else{
-
-        // 夜晚
+    } else {
         sun.intensity = THREE.MathUtils.lerp(sun.intensity, 0.1, 0.02);
         scene.background.setHex(0x0c1322);
-        scene.fog.color.setHex(0x0c1322);
     }
 }
 
+// 绑定操作按钮
+document.getElementById("plantBtn").onclick = () => plantCrop();
+document.getElementById("interactBtn").onclick = () => interact();
+document.getElementById("saveBtn").onclick = () => saveGame();
 
-/* =========================================================
-   窗口大小重置
-========================================================= */
-
-window.addEventListener("resize", ()=>{
-
+window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// 初始化检查登录
+checkSession();
 
-/* =========================================================
-   主循环
-========================================================= */
-
-function animate(){
-
+// 游戏动画主循环
+function animate() {
     requestAnimationFrame(animate);
-
     const delta = clock.getDelta();
 
-    updatePlayer(delta);
+    if (currentUser) {
+        updatePlayer(delta);
+        updateCrops(delta);
+        updateTimeAndEnvironment(delta);
+        updateUI();
+    }
 
     updateCamera();
-
-    updateCrops(delta);
-
-    updateTimeAndEnvironment(delta);
-
-    updateUI();
-
     renderer.render(scene, camera);
 }
-
 animate();
 
 </script>
