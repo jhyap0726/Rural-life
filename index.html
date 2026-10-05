@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>乡村生活 3D - 带用户系统</title>
 
+<!-- 使用经典 script 标签引入 Three.js，避免 ES Module 跨域或加载失败导致蓝屏 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <style>
 *{
     box-sizing:border-box;
@@ -35,8 +38,8 @@ canvas{
 .auth-modal{
     position:fixed;
     inset:0;
-    z-index:100;
-    background:rgba(0,0,0,.65);
+    z-index:999;
+    background:rgba(0,0,0,.7);
     backdrop-filter:blur(10px);
     display:flex;
     align-items:center;
@@ -46,7 +49,7 @@ canvas{
 .auth-box{
     width:340px;
     padding:30px;
-    background:rgba(20,30,22,.92);
+    background:rgba(20,30,22,.95);
     border-radius:20px;
     border:1px solid rgba(255,255,255,.2);
     box-shadow:0 15px 35px rgba(0,0,0,.5);
@@ -230,17 +233,8 @@ canvas{
     background:rgba(255,255,255,.8);
 }
 
-#crosshair::before{
-    width:18px;
-    height:2px;
-    top:8px;
-}
-
-#crosshair::after{
-    width:2px;
-    height:18px;
-    left:8px;
-}
+#crosshair::before{ width:18px; height:2px; top:8px; }
+#crosshair::after{ width:2px; height:18px; left:8px; }
 
 /* ================= 按钮 ================= */
 
@@ -265,11 +259,7 @@ canvas{
     cursor:pointer;
 }
 
-.action:active{
-    transform:scale(.92);
-}
-
-/* ================= 手机 ================= */
+.action:active{ transform:scale(.92); }
 
 #mobile{
     display:none;
@@ -368,10 +358,7 @@ canvas{
     <button class="mbtn" id="right">▶</button>
 </div>
 
-<script type="module">
-
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
-import {GLTFLoader} from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+<script>
 
 /* =========================================================
    用户系统与数据持久化逻辑 (AUTH & STORAGE)
@@ -380,7 +367,6 @@ import {GLTFLoader} from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js
 let currentUser = null;
 let isAuthModeLogin = true;
 
-// 从 localStorage 获取本地用户数据库
 function getUsersDB() {
     try {
         return JSON.parse(localStorage.getItem("ruralLife_usersDB")) || {};
@@ -393,7 +379,6 @@ function saveUsersDB(db) {
     localStorage.setItem("ruralLife_usersDB", JSON.stringify(db));
 }
 
-// 默认新玩家存档模板
 function createDefaultSaveData() {
     return {
         gold: 500,
@@ -409,7 +394,6 @@ function createDefaultSaveData() {
 
 let data = createDefaultSaveData();
 
-// 界面组件
 const authModal = document.getElementById("authModal");
 const authTitle = document.getElementById("authTitle");
 const authError = document.getElementById("authError");
@@ -419,7 +403,6 @@ const authBtn = document.getElementById("authBtn");
 const authSwitch = document.getElementById("authSwitch");
 const logoutBtn = document.getElementById("logoutBtn");
 
-// 切换 登录/注册 模式
 authSwitch.onclick = () => {
     isAuthModeLogin = !isAuthModeLogin;
     authError.textContent = "";
@@ -434,7 +417,6 @@ authSwitch.onclick = () => {
     }
 };
 
-// 提交 登录/注册
 authBtn.onclick = () => {
     const user = usernameInput.value.trim();
     const pwd = passwordInput.value.trim();
@@ -447,7 +429,6 @@ authBtn.onclick = () => {
     const db = getUsersDB();
 
     if (isAuthModeLogin) {
-        // ---- 登录逻辑 ----
         if (!db[user]) {
             authError.textContent = "账号不存在！";
             return;
@@ -456,26 +437,19 @@ authBtn.onclick = () => {
             authError.textContent = "密码错误！";
             return;
         }
-
-        // 登录成功
         currentUser = user;
         data = db[user].saveData || createDefaultSaveData();
         onLoginSuccess();
-
     } else {
-        // ---- 注册逻辑 ----
         if (db[user]) {
             authError.textContent = "用户名已被注册！";
             return;
         }
-
         db[user] = {
             password: pwd,
             saveData: createDefaultSaveData()
         };
         saveUsersDB(db);
-
-        // 注册并登录
         currentUser = user;
         data = db[user].saveData;
         onLoginSuccess();
@@ -485,31 +459,25 @@ authBtn.onclick = () => {
 function onLoginSuccess() {
     authModal.style.display = "none";
     document.getElementById("currentUser").textContent = currentUser;
-    
-    // 重置角色位置
     if (player) {
         player.position.x = data.x;
         player.position.z = data.z;
     }
-    
     localStorage.setItem("ruralLife_sessionUser", currentUser);
-    showMessage(`welcome 👋 欢迎回来，${currentUser}！`);
+    showMessage(`欢迎回来，${currentUser}！`);
     updateUI();
 }
 
-// 登出
 logoutBtn.onclick = () => {
-    saveGame(); // 登出前自动保存
+    saveGame();
     currentUser = null;
     localStorage.removeItem("ruralLife_sessionUser");
-    
     usernameInput.value = "";
     passwordInput.value = "";
     authError.textContent = "";
     authModal.style.display = "flex";
 };
 
-// 检查上一次会话
 function checkSession() {
     const sessionUser = localStorage.getItem("ruralLife_sessionUser");
     if (sessionUser) {
@@ -525,13 +493,10 @@ function checkSession() {
     authModal.style.display = "flex";
 }
 
-// 保存游戏存档到当前用户
 function saveGame() {
     if (!currentUser) return;
-
     data.x = player.position.x;
     data.z = player.position.z;
-
     const db = getUsersDB();
     if (db[currentUser]) {
         db[currentUser].saveData = data;
@@ -549,17 +514,14 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x91c9e5);
 scene.fog = new THREE.FogExp2(0x91c9e5, .0024);
 
-const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .1, 1200);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, .1, 1200);
 camera.position.set(0, 6, 12);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-renderer.setSize(innerWidth, innerHeight);
+renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.15;
 game.appendChild(renderer.domElement);
 
 const hemisphere = new THREE.HemisphereLight(0xd9f3ff, 0x405f35, 1.8);
@@ -568,12 +530,6 @@ scene.add(hemisphere);
 const sun = new THREE.DirectionalLight(0xfff0c7, 3);
 sun.position.set(100, 150, 80);
 sun.castShadow = true;
-sun.shadow.mapSize.width = 2048;
-sun.shadow.mapSize.height = 2048;
-sun.shadow.camera.left = -250;
-sun.shadow.camera.right = 250;
-sun.shadow.camera.top = 250;
-sun.shadow.camera.bottom = -250;
 scene.add(sun);
 
 const world = new THREE.Group();
@@ -615,24 +571,23 @@ road(65, -30, 5, 180, Math.PI / 2);
 
 const river = new THREE.Mesh(
     new THREE.PlaneGeometry(35, 500, 1, 20),
-    new THREE.MeshPhysicalMaterial({ color: 0x398ab7, transparent: true, opacity: .82, roughness: .12, metalness: .05 })
+    new THREE.MeshStandardMaterial({ color: 0x398ab7, roughness: .1 })
 );
 river.rotation.x = -Math.PI / 2;
 river.position.set(-85, .18, 0);
 world.add(river);
 
-// 房屋创建
+// 房屋
 function createHouse(x, z, scale = 1) {
     const house = new THREE.Group();
     house.position.set(x, 0, z);
     house.scale.setScalar(scale);
 
-    const wall = new THREE.Mesh(new THREE.BoxGeometry(12, 6, 9), new THREE.MeshStandardMaterial({ color: 0xd7bc8d, roughness: .85 }));
-    wall.position.y = 3;
-    wall.castShadow = true; wall.receiveShadow = true;
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(12, 6, 9), new THREE.MeshStandardMaterial({ color: 0xd7bc8d }));
+    wall.position.y = 3; wall.castShadow = true; wall.receiveShadow = true;
     house.add(wall);
 
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 5, 4), new THREE.MeshStandardMaterial({ color: 0x704438, roughness: .9 }));
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 5, 4), new THREE.MeshStandardMaterial({ color: 0x704438 }));
     roof.position.y = 8; roof.rotation.y = Math.PI / 4; roof.castShadow = true;
     house.add(roof);
 
@@ -666,11 +621,11 @@ function createTree(x, z) {
     const tree = new THREE.Group();
     tree.position.set(x, 0, z);
 
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.55, .8, 5, 12), new THREE.MeshStandardMaterial({ color: 0x67442d, roughness: 1 }));
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.55, .8, 5, 12), new THREE.MeshStandardMaterial({ color: 0x67442d }));
     trunk.position.y = 2.5; trunk.castShadow = true;
     tree.add(trunk);
 
-    const leaves = new THREE.Mesh(new THREE.SphereGeometry(3.5, 16, 12), new THREE.MeshStandardMaterial({ color: 0x2f6d32, roughness: 1 }));
+    const leaves = new THREE.Mesh(new THREE.SphereGeometry(3.5, 16, 12), new THREE.MeshStandardMaterial({ color: 0x2f6d32 }));
     leaves.position.y = 6; leaves.castShadow = true;
     tree.add(leaves);
 
@@ -692,7 +647,7 @@ scene.add(player);
 
 function createPlayer() {
     const group = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(.45, 1.05, 8, 16), new THREE.MeshStandardMaterial({ color: 0x356aa8 }));
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, 1.5, 16), new THREE.MeshStandardMaterial({ color: 0x356aa8 }));
     body.position.y = 1.15; body.castShadow = true;
     group.add(body);
 
@@ -736,7 +691,7 @@ function showMessage(text) {
 
 const keys = {};
 window.addEventListener("keydown", e => {
-    if (!currentUser) return; // 未登录禁止操作
+    if (!currentUser) return;
     const key = e.key.toLowerCase();
     keys[key] = true;
     if (key === "e") interact();
@@ -754,14 +709,14 @@ window.addEventListener("mouseup", () => { dragging = false; });
 window.addEventListener("mousemove", e => {
     if (!dragging || !currentUser) return;
     cameraYaw -= (e.clientX - mouseX) * .005;
-    cameraPitch = THREE.MathUtils.clamp(cameraPitch - (e.clientY - mouseY) * .004, .15, 1.1);
+    cameraPitch = Math.max(.15, Math.min(1.1, cameraPitch - (e.clientY - mouseY) * .004));
     mouseX = e.clientX; mouseY = e.clientY;
 });
 
 const clock = new THREE.Clock();
 
 function updatePlayer(delta) {
-    if (!currentUser) return; // 登录框显示时禁止移动
+    if (!currentUser) return;
 
     let dx = 0, dz = 0;
     if (keys.w) dz -= 1;
@@ -794,7 +749,7 @@ function updateCamera() {
         Math.cos(cameraYaw) * Math.cos(cameraPitch) * dist
     );
     const target = player.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-    camera.position.lerp(target.clone().add(offset), .1);
+    camera.position.copy(target.clone().add(offset));
     camera.lookAt(target);
 }
 
@@ -833,7 +788,7 @@ function updateCrops(delta) {
     for (const spot of cropSpots) {
         if (spot.planted && spot.crop && spot.age < 1) {
             spot.age += delta * 0.05;
-            const scale = THREE.MathUtils.lerp(0.2, 1.2, spot.age);
+            const scale = 0.2 + spot.age * 1.0;
             spot.crop.scale.set(scale, scale, scale);
             if (spot.age >= 1) {
                 spot.crop.traverse(c => { if (c.isMesh) c.material.color.setHex(0xe3b134); });
@@ -912,10 +867,10 @@ function updateTimeAndEnvironment(delta) {
     sun.position.y = Math.sin(angle) * 200;
 
     if (data.gameTime > 6 && data.gameTime < 18) {
-        sun.intensity = THREE.MathUtils.lerp(sun.intensity, 3, 0.02);
+        sun.intensity = 3;
         scene.background.setHex(0x91c9e5);
     } else {
-        sun.intensity = THREE.MathUtils.lerp(sun.intensity, 0.1, 0.02);
+        sun.intensity = 0.2;
         scene.background.setHex(0x0c1322);
     }
 }
@@ -934,7 +889,7 @@ window.addEventListener("resize", () => {
 // 初始化检查登录
 checkSession();
 
-// 游戏动画主循环
+// 游戏主循环
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
