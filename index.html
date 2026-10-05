@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>乡村生活 3D - 拟真生存与自由烹饪版</title>
+<title>乡村生活 3D - Roblox 角色版</title>
 
 <!-- Three.js 核心及高级后处理组件 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -211,11 +211,11 @@ canvas{ display:block; }
 .tool-slot.active{
     border-color:#38bdf8;
     background:rgba(56,189,248,0.2);
-    color:#white;
+    color:white;
     font-weight:bold;
 }
 
-/* ================= 自由烹饪烹饪界面 ================= */
+/* ================= 自由烹饪 UI ================= */
 
 #cookingModal{
     position:fixed;
@@ -426,7 +426,7 @@ canvas{ display:block; }
 </div>
 
 <div id="help">
-    <b>🎮 拟真乡村生活</b><br>
+    <b>🎮 Roblox 角色拟真乡村生活</b><br>
     WASD：移动 | 按住鼠标左键：旋转视角<br>
     数字键 1 - 4：切换工具<br>
     E：使用工具 / 交互<br>
@@ -772,46 +772,113 @@ function updateWeatherSystem(delta) {
 }
 
 /* =========================================================
-   4. 角色与手持装备模型系统
+   4. Roblox 经典方块人角色模型与动态骨骼部件
 ========================================================= */
 
-function createPlayer() {
-    const group = new THREE.Group();
+let leftArm, rightArm, leftLeg, rightLeg;
 
-    // 躯干
-    const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.8, 1.2, 0.5),
-        new THREE.MeshStandardMaterial({ color: 0x0284c7 })
-    );
-    body.position.y = 1.2;
-    body.castShadow = true;
-    group.add(body);
+function createRobloxFaceTexture() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256; canvas.height = 256;
+    const ctx = canvas.getContext("2d");
 
-    // 头部
-    const head = new THREE.Mesh(
-        new THREE.BoxGeometry(0.65, 0.65, 0.65),
-        new THREE.MeshStandardMaterial({ color: 0xffedd5 })
-    );
-    head.position.y = 2.15;
-    head.castShadow = true;
-    group.add(head);
+    ctx.fillStyle = "#facc15"; // 黄色面部底色
+    ctx.fillRect(0, 0, 256, 256);
 
-    // 右手挂载点
-    const hand = new THREE.Group();
-    hand.position.set(0.55, 1.2, 0.2);
-    hand.name = "rightHand";
-    group.add(hand);
+    // Roblox 经典弯眼笑脸
+    ctx.fillStyle = "#000000";
+    // 左眼
+    ctx.beginPath(); ctx.arc(80, 100, 16, 0, Math.PI * 2); ctx.fill();
+    // 右眼
+    ctx.beginPath(); ctx.arc(176, 100, 16, 0, Math.PI * 2); ctx.fill();
+    // 笑嘴
+    ctx.lineWidth = 12; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(128, 140, 50, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke();
 
-    scene.add(group);
-    return group;
+    return new THREE.CanvasTexture(canvas);
 }
 
-const player = createPlayer();
+function createRobloxPlayer() {
+    const playerGroup = new THREE.Group();
+
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
+    const faceTex = createRobloxFaceTexture();
+    const faceMat = new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.4 });
+
+    // 1. 头部 Head (前侧单面使用笑脸贴图)
+    const headGeom = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+    const headMaterials = [
+        headMat, headMat, headMat, headMat,
+        faceMat, // 前面
+        headMat
+    ];
+    const head = new THREE.Mesh(headGeom, headMaterials);
+    head.position.y = 2.4;
+    head.castShadow = true;
+    playerGroup.add(head);
+
+    // 2. 躯干 Torso (经典蓝色)
+    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 0.6), torsoMat);
+    torso.position.y = 1.2;
+    torso.castShadow = true;
+    playerGroup.add(torso);
+
+    // 3. 左手臂 Left Arm (经典黄色)
+    const armMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
+    leftArm = new THREE.Group();
+    leftArm.position.set(-0.9, 1.8, 0); // 肩部旋转点
+    const leftArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), armMat);
+    leftArmMesh.position.y = -0.6;
+    leftArmMesh.castShadow = true;
+    leftArm.add(leftArmMesh);
+    playerGroup.add(leftArm);
+
+    // 4. 右手臂 Right Arm
+    rightArm = new THREE.Group();
+    rightArm.position.set(0.9, 1.8, 0); // 肩部旋转点
+    const rightArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), armMat);
+    rightArmMesh.position.y = -0.6;
+    rightArmMesh.castShadow = true;
+    rightArm.add(rightArmMesh);
+
+    // 右手工具挂载点
+    const handPoint = new THREE.Group();
+    handPoint.position.set(0, -0.6, 0.3);
+    handPoint.name = "handPoint";
+    rightArm.add(handPoint);
+
+    playerGroup.add(rightArm);
+
+    // 5. 左腿 Left Leg (经典绿色)
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.4 });
+    leftLeg = new THREE.Group();
+    leftLeg.position.set(-0.32, 0.6, 0); // 髋部旋转点
+    const leftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), legMat);
+    leftLegMesh.position.y = -0.6;
+    leftLegMesh.castShadow = true;
+    leftLeg.add(leftLegMesh);
+    playerGroup.add(leftLeg);
+
+    // 6. 右腿 Right Leg
+    rightLeg = new THREE.Group();
+    rightLeg.position.set(0.32, 0.6, 0);
+    const rightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), legMat);
+    rightLegMesh.position.y = -0.6;
+    rightLegMesh.castShadow = true;
+    rightLeg.add(rightLegMesh);
+    playerGroup.add(rightLeg);
+
+    scene.add(playerGroup);
+    return playerGroup;
+}
+
+const player = createRobloxPlayer();
 player.position.set(data.x, 0, data.z);
 
 function switchTool(type) {
     currentTool = type;
-    const hand = player.getObjectByName("rightHand");
+    const hand = rightArm.getObjectByName("handPoint");
     while(hand.children.length > 0) hand.remove(hand.children[0]);
 
     document.querySelectorAll(".tool-slot").forEach(s => s.classList.remove("active"));
@@ -952,7 +1019,7 @@ document.getElementById("closeCookBtn").onclick = () => {
 };
 
 /* =========================================================
-   6. 拟真移动控制与核心游戏逻辑
+   6. 拟真移动控制与 Roblox 角色摆动肢体动画
 ========================================================= */
 
 const keys = {};
@@ -982,6 +1049,7 @@ window.addEventListener("mousemove", e => {
 });
 
 let footstepTimer = 0;
+let walkAnimTime = 0;
 
 function updatePlayerMovement(delta) {
     if (!currentUser) return;
@@ -992,193 +1060,110 @@ function updatePlayerMovement(delta) {
     if (keys.a) dx -= 1;
     if (keys.d) dx += 1;
 
-    if (dx === 0 && dz === 0) return;
+    // 无移动时，四肢平滑复位
+    if (dx === 0 && dz === 0) {
+        leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, 0, 0.1);
+        rightArm.rotation.x = THREE.MathUtils.lerp(rightArm.rotation.x, 0, 0.1);
+        leftLeg.rotation.x = THREE.MathUtils.lerp(leftLeg.rotation.x, 0, 已将原有的方块角色替换为经典 **Roblox Blocky 人体模型（R6 风格）**，包含头部、经典大眼睛笑脸、躯干、双臂以及双腿，并且优化了手持工具的挂载位置。
 
-    const len = Math.hypot(dx, dz);
-    dx /= len; dz /= len;
+请直接复制并替换代码中的 `createPlayer` 函数及其相关生成逻辑：
 
-    const sin = Math.sin(cameraYaw), cos = Math.cos(cameraYaw);
-    const moveX = dx * cos - dz * sin;
-    const moveZ = dx * sin + dz * cos;
-    const speed = 10;
+```javascript
+/* =========================================================
+   4. 经典 Roblox (R6 Style) 角色与装备模型系统
+========================================================= */
 
-    const nextX = player.position.x + moveX * speed * delta;
-    const nextZ = player.position.z + moveZ * speed * delta;
+function createPlayer() {
+    const group = new THREE.Group();
 
-    // AABB 碰撞阻挡
-    const playerBox = new THREE.Box3().setFromCenterAndSize(
-        new THREE.Vector3(nextX, 1, nextZ),
-        new THREE.Vector3(0.9, 2, 0.9)
+    // 材质定义
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcd38, roughness: 0.4 }); // Roblox 经典黄皮肤
+    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x00a2ff, roughness: 0.5 }); // 蓝色 T 恤
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x1b2a35, roughness: 0.5 });   // 深蓝/黑裤子
+
+    // 1. 头部 (Head) - 经典方形胶囊状
+    const headGroup = new THREE.Group();
+    const headMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(1.0, 0.9, 1.0),
+        skinMat
     );
+    headMesh.position.y = 2.45;
+    headMesh.castShadow = true;
+    headGroup.add(headMesh);
 
-    let collided = false;
-    for (const box of colliders) {
-        if (playerBox.intersectsBox(box)) { collided = true; break; }
-    }
+    // 绘制 Roblox 经典表情（眼睛与微笑）
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffcd38';
+    ctx.fillRect(0, 0, 128, 128);
+    // 眼睛
+    ctx.fillStyle = '#000000';
+    ctx.beginPath(); ctx.arc(40, 50, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(88, 50, 8, 0, Math.PI * 2); ctx.fill();
+    // 弧形微笑
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(64, 65, 28, 0.2, Math.PI - 0.2); ctx.stroke();
 
-    if (!collided) {
-        player.position.x = nextX;
-        player.position.z = nextZ;
-        player.rotation.y = Math.atan2(moveX, moveZ);
+    const faceTexture = new THREE.CanvasTexture(canvas);
+    const faceMat = new THREE.MeshBasicMaterial({ map: faceTexture, transparent: true });
+    const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), faceMat);
+    facePlane.position.set(0, 2.45, 0.51);
+    headGroup.add(facePlane);
 
-        footstepTimer += delta;
-        if (footstepTimer > 0.35) {
-            audio.playFootstep();
-            footstepTimer = 0;
-        }
-    }
-}
+    group.add(headGroup);
 
-function updateCamera() {
-    const dist = 14;
-    const offset = new THREE.Vector3(
-        Math.sin(cameraYaw) * Math.cos(cameraPitch) * dist,
-        Math.sin(cameraPitch) * dist,
-        Math.cos(cameraYaw) * Math.cos(cameraPitch) * dist
+    // 2. 躯干 (Torso)
+    const torso = new THREE.Mesh(
+        new THREE.BoxGeometry(1.6, 1.6, 0.8),
+        torsoMat
     );
-    const target = player.position.clone().add(new THREE.Vector3(0, 1.5, 0));
-    camera.position.copy(target.clone().add(offset));
-    camera.lookAt(target);
+    torso.position.y = 1.3;
+    torso.castShadow = true;
+    group.add(torso);
+
+    // 3. 左臂 (Left Arm)
+    const leftArm = new THREE.Mesh(
+        new THREE.BoxGeometry(0.75, 1.5, 0.75),
+        skinMat
+    );
+    leftArm.position.set(-1.22, 1.25, 0);
+    leftArm.castShadow = true;
+    group.add(leftArm);
+
+    // 4. 右臂 (Right Arm)
+    const rightArm = new THREE.Mesh(
+        new THREE.BoxGeometry(0.75, 1.5, 0.75),
+        skinMat
+    );
+    rightArm.position.set(1.22, 1.25, 0);
+    rightArm.castShadow = true;
+    group.add(rightArm);
+
+    // 右手工具挂载点
+    const hand = new THREE.Group();
+    hand.position.set(1.22, 0.7, 0.4);
+    hand.name = "rightHand";
+    group.add(hand);
+
+    // 5. 左腿 (Left Leg)
+    const leftLeg = new THREE.Mesh(
+        new THREE.BoxGeometry(0.78, 1.5, 0.78),
+        legMat
+    );
+    leftLeg.position.set(-0.41, 0.4, 0);
+    leftLeg.castShadow = true;
+    group.add(leftLeg);
+
+    // 6. 右腿 (Right Leg)
+    const rightLeg = new THREE.Mesh(
+        new THREE.BoxGeometry(0.78, 1.5, 0.78),
+        legMat
+    );
+    rightLeg.position.set(0.41, 0.4, 0);
+    rightLeg.castShadow = true;
+    group.add(rightLeg);
+
+    scene.add(group);
+    return group;
 }
-
-function handleInteraction() {
-    if (data.stamina <= 0) { showMessage("⚡ 体力枯竭，无法进行操作！"); return; }
-
-    // 检查是否靠近小木屋灶台 (开启烹饪系统)
-    if (player.position.distanceTo(new THREE.Vector3(20, 0, -20)) < 12) {
-        openCookingMenu();
-        return;
-    }
-
-    // 斧头砍树
-    if (currentTool === "axe") {
-        let nearestTree = null, minD = 999;
-        for (const t of trees) {
-            const d = player.position.distanceTo(t.position);
-            if (d < minD && d < 6) { minD = d; nearestTree = t; }
-        }
-        if (nearestTree) {
-            data.stamina -= 8;
-            data.wood += 3;
-            if (Math.random() < 0.3) data.meat += 1; // 偶尔打猎获得兽肉
-            audio.playChop();
-            nearestTree.scale.multiplyScalar(0.92);
-            showMessage("🪓 砍伐树木！木材+3 (概率获得兽肉)");
-            updateUI();
-            return;
-        }
-    }
-
-    // 锄头耕作
-    if (currentTool === "hoe") {
-        data.stamina -= 5;
-        if (Math.random() > 0.5) { data.wheat += 1; showMessage("🌱 开垦收获了【小麦】！"); }
-        else { data.carrot += 1; showMessage("🥕 开垦收获了【胡萝卜】！"); }
-        audio.playTone(200, "sine", 0.1);
-        updateUI();
-        return;
-    }
-
-    // 鱼竿钓鱼
-    if (currentTool === "rod") {
-        if (player.position.distanceTo(lake.position) < 14) {
-            data.stamina -= 6;
-            data.fish += 1;
-            audio.playWater();
-            showMessage("🎣 垂钓成功！获得【鲜鱼】+1");
-            updateUI();
-            return;
-        } else {
-            showMessage("🌊 请靠近湖泊后再抛竿钓鱼！");
-            return;
-        }
-    }
-
-    showMessage("💡 请靠近小木屋灶台，或使用 1-4 切换工具进行交互！");
-}
-
-function updateUI() {
-    document.getElementById("staminaVal").textContent = `${Math.floor(data.stamina)}/100`;
-    document.getElementById("hungerVal").textContent = `${Math.floor(data.hunger)}/100`;
-    document.getElementById("staminaBar").style.width = Math.max(0, data.stamina) + "%";
-    document.getElementById("hungerBar").style.width = Math.max(0, data.hunger) + "%";
-
-    document.getElementById("gold").textContent = data.gold;
-    document.getElementById("wood").textContent = data.wood;
-    document.getElementById("wheat").textContent = data.wheat;
-    document.getElementById("carrot").textContent = data.carrot;
-    document.getElementById("fish").textContent = data.fish;
-    document.getElementById("meat").textContent = data.meat;
-    document.getElementById("weatherText").textContent = currentWeather;
-
-    const hour = Math.floor(data.gameTime);
-    const minute = Math.floor((data.gameTime - hour) * 60);
-    document.getElementById("time").textContent = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-let messageTimer;
-function showMessage(text) {
-    const el = document.getElementById("message");
-    el.textContent = text;
-    el.style.opacity = "1";
-    clearTimeout(messageTimer);
-    messageTimer = setTimeout(() => { el.style.opacity = "0"; }, 2000);
-}
-
-document.getElementById("interactBtn").onclick = () => handleInteraction();
-document.getElementById("saveBtn").onclick = () => saveGame();
-
-document.getElementById("tool1").onclick = () => switchTool("none");
-document.getElementById("tool2").onclick = () => switchTool("axe");
-document.getElementById("tool3").onclick = () => switchTool("hoe");
-document.getElementById("tool4").onclick = () => switchTool("rod");
-
-window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// 检查会话状态
-checkSession();
-
-// 游戏主帧循环
-const clock = new THREE.Clock();
-
-function animate() {
-    requestAnimationFrame(animate);
-    const delta = clock.getDelta();
-
-    if (currentUser) {
-        updatePlayerMovement(delta);
-
-        // 拟真时间与自然饥饿/体力消耗
-        data.gameTime += delta * 0.05;
-        if (data.gameTime >= 24) {
-            data.gameTime -= 24;
-            // 随机切换天气 (晴朗 / 下雨 / 降雪)
-            const r = Math.random();
-            currentWeather = r < 0.5 ? "晴朗" : (r < 0.8 ? "下雨" : "降雪");
-            showMessage(`🌅 新的一天开始，今天的天气是【${currentWeather}】！`);
-        }
-
-        // 饥饿度随时间自然下降
-        data.hunger = Math.max(0, data.hunger - delta * 0.3);
-        if (data.hunger === 0) {
-            // 饱腹度为零时持续消耗体力
-            data.stamina = Math.max(0, data.stamina - delta * 2);
-        }
-
-        updateWeatherSystem(delta);
-        updateUI();
-    }
-
-    updateCamera();
-    composer.render();
-}
-animate();
-
-</script>
-</body>
-</html>
