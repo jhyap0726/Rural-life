@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -300,7 +299,7 @@ canvas{
 
     W A S D：移动<br>
     鼠标拖动：旋转镜头<br>
-    E：互动<br>
+    E：互动 / 收割<br>
     1：种植<br>
     2：砍树<br>
     3：钓鱼<br>
@@ -740,7 +739,7 @@ function createHouse(
         const side of [-1,1]
     ){
 
-        const window =
+        const win =
             new THREE.Mesh(
                 new THREE.BoxGeometry(
                     2.2,
@@ -754,13 +753,13 @@ function createHouse(
                 })
             );
 
-        window.position.set(
+        win.position.set(
             side*3.5,
             3.4,
             4.55
         );
 
-        house.add(window);
+        house.add(win);
     }
 
 
@@ -1280,8 +1279,6 @@ player.add(
 
 /* =========================================================
    后台加载真实人物
-   注意：
-   这里不会阻止游戏启动
 ========================================================= */
 
 function loadRealPlayerInBackground(){
@@ -1332,17 +1329,14 @@ function loadRealPlayerInBackground(){
 
         error=>{
 
-            /*
-             * 没有 player.glb 完全没关系。
-             * 游戏继续使用内置人物。
-             */
-
             console.log(
                 "player.glb 不存在，使用内置人物。"
             );
         }
     );
 }
+
+loadRealPlayerInBackground();
 
 
 /* =========================================================
@@ -1362,7 +1356,7 @@ let data={
 
 
 /* =========================================================
-   保存
+   保存与加载
 ========================================================= */
 
 function saveGame(){
@@ -1413,6 +1407,8 @@ function loadGame(){
         console.log(error);
     }
 }
+
+loadGame();
 
 
 /* =========================================================
@@ -1567,7 +1563,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   手机控制
+   手机与界面按钮交互
 ========================================================= */
 
 function mobileControl(
@@ -1604,25 +1600,15 @@ function mobileControl(
 }
 
 
-mobileControl(
-    "up",
-    "w"
-);
+mobileControl("up","w");
+mobileControl("down","s");
+mobileControl("left","a");
+mobileControl("right","d");
 
-mobileControl(
-    "down",
-    "s"
-);
-
-mobileControl(
-    "left",
-    "a"
-);
-
-mobileControl(
-    "right",
-    "d"
-);
+// 绑定右下角 UI 操作按钮
+document.getElementById("plantBtn").onclick = () => plantCrop();
+document.getElementById("interactBtn").onclick = () => interact();
+document.getElementById("saveBtn").onclick = () => saveGame();
 
 
 /* =========================================================
@@ -1743,21 +1729,28 @@ function updatePlayer(
     dz/=length;
 
 
+    // 计算相对于摄像机方向的视角移动
+    const sin = Math.sin(cameraYaw);
+    const cos = Math.cos(cameraYaw);
+
+    const moveX = dx * cos - dz * sin;
+    const moveZ = dx * sin + dz * cos;
+
     const speed=8;
 
 
     player.position.x +=
-        dx*speed*delta;
+        moveX*speed*delta;
 
 
     player.position.z +=
-        dz*speed*delta;
+        moveZ*speed*delta;
 
 
     player.rotation.y =
         Math.atan2(
-            dx,
-            dz
+            moveX,
+            moveZ
         );
 
 
@@ -1935,6 +1928,8 @@ function plantCrop(){
         nearest.mesh.position
     );
 
+    crop.scale.set(0.2, 0.2, 0.2); // 刚种下时微小
+
 
     nearest.mesh.parent.add(
         crop
@@ -1953,6 +1948,31 @@ function plantCrop(){
 
 
     updateUI();
+}
+
+
+/* =========================================================
+   作物生长逻辑
+========================================================= */
+
+function updateCrops(delta) {
+    for (const spot of cropSpots) {
+        if (spot.planted && spot.crop && spot.age < 1) {
+            spot.age += delta * 0.05; // 生长速度
+
+            // 动态伸长与变黄（成熟）
+            const scale = THREE.MathUtils.lerp(0.2, 1.2, spot.age);
+            spot.crop.scale.set(scale, scale, scale);
+
+            if (spot.age >= 1) {
+                spot.crop.traverse(child => {
+                    if (child.isMesh) {
+                        child.material.color.setHex(0xe3b134); // 小麦成熟黄色
+                    }
+                });
+            }
+        }
+    }
 }
 
 
@@ -2145,14 +2165,12 @@ function shop(){
 
 
 /* =========================================================
-   互动
+   互动（补全核心代码）
 ========================================================= */
 
 function interact(){
 
-    if(
-        data.stamina<=0
-    ){
+    if(data.stamina<=0){
 
         showMessage(
             "⚡ 体力不足"
@@ -2161,491 +2179,148 @@ function interact(){
         return;
     }
 
+    // 1. 优先检测收割成熟作物
+    for(const spot of cropSpots){
 
-    let nearest=null;
-    let distance=999;
+        if(spot.planted && spot.age >= 1){
 
+            const pos = new THREE.Vector3();
+            spot.mesh.getWorldPosition(pos);
 
-    for(
-        const tree of trees
-    ){
+            if(player.position.distanceTo(pos) < 6){
 
-        const d =
-            player.position.distanceTo(
-                tree.position
-            );
+                spot.planted = false;
+                spot.age = 0;
 
+                if(spot.crop){
+                    spot.crop.parent.remove(spot.crop);
+                    spot.crop = null;
+                }
 
-        if(d<distance){
+                data.wheat += 2;
+                data.stamina = Math.max(0, data.stamina - 3);
 
-            distance=d;
-            nearest=tree;
-        }
-    }
-
-
-    if(
-        nearest &&
-        distance<7
-    ){
-
-        chopTree();
-
-        return;
-    }
-
-
-    if(
-        Math.abs(
-            player.position.x+85
-        )<25
-    ){
-
-        fishing();
-
-        return;
-    }
-
-
-    plantCrop();
-}
-
-
-/* =========================================================
-   按钮
-========================================================= */
-
-document.getElementById(
-    "plantBtn"
-).onclick=plantCrop;
-
-
-document.getElementById(
-    "interactBtn"
-).onclick=interact;
-
-
-document.getElementById(
-    "saveBtn"
-).onclick=saveGame;
-
-
-/* =========================================================
-   天气
-========================================================= */
-
-let raining=false;
-
-
-const rainGroup =
-    new THREE.Group();
-
-scene.add(
-    rainGroup
-);
-
-
-const rainGeometry =
-    new THREE.BufferGeometry();
-
-const rainVertices=[];
-
-
-for(
-    let i=0;
-    i<1500;
-    i++
-){
-
-    rainVertices.push(
-        (Math.random()-.5)*300,
-        Math.random()*80,
-        (Math.random()-.5)*300
-    );
-}
-
-
-rainGeometry.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute(
-        rainVertices,
-        3
-    )
-);
-
-
-const rain =
-    new THREE.Points(
-        rainGeometry,
-        new THREE.PointsMaterial({
-            color:0xbad8e8,
-            size:.15,
-            transparent:true,
-            opacity:.7
-        })
-    );
-
-
-rainGroup.add(
-    rain
-);
-
-
-rainGroup.visible=false;
-
-
-/* =========================================================
-   时间
-========================================================= */
-
-function updateTime(
-    delta
-){
-
-    data.gameTime+=
-        delta*.15;
-
-
-    if(
-        data.gameTime>=24
-    ){
-
-        data.gameTime=0;
-    }
-
-
-    const angle =
-        (data.gameTime/24)*
-        Math.PI*2;
-
-
-    sun.position.x=
-        Math.cos(angle)*150;
-
-
-    sun.position.y=
-        Math.sin(angle)*150;
-
-
-    sun.position.z=80;
-
-
-    const daylight=
-        Math.max(
-            .08,
-            Math.sin(angle)
-        );
-
-
-    sun.intensity=
-        .35+
-        daylight*2.8;
-
-
-    hemisphere.intensity=
-        .35+
-        daylight*1.5;
-
-
-    if(
-        data.gameTime>=6 &&
-        data.gameTime<18
-    ){
-
-        scene.background.lerp(
-            new THREE.Color(
-                0x91c9e5
-            ),
-            .02
-        );
-
-    }else{
-
-        scene.background.lerp(
-            new THREE.Color(
-                0x14263d
-            ),
-            .02
-        );
-    }
-}
-
-
-/* =========================================================
-   随机天气
-========================================================= */
-
-function updateWeather(){
-
-    if(
-        Math.random()<.0004
-    ){
-
-        raining=!raining;
-
-
-        rainGroup.visible=
-            raining;
-
-
-        document.getElementById(
-            "weather"
-        ).textContent=
-            raining
-            ?"🌧️ 下雨"
-            :"☀️ 晴天";
-    }
-}
-
-
-/* =========================================================
-   雨
-========================================================= */
-
-function updateRain(
-    delta
-){
-
-    if(!raining)
-        return;
-
-
-    const position =
-        rainGeometry.attributes.position;
-
-
-    for(
-        let i=0;
-        i<position.count;
-        i++
-    ){
-
-        let y=
-            position.getY(i);
-
-
-        y-=
-            delta*35;
-
-
-        if(y<0)
-            y=80;
-
-
-        position.setY(
-            i,
-            y
-        );
-    }
-
-
-    position.needsUpdate=true;
-}
-
-
-/* =========================================================
-   作物成长
-========================================================= */
-
-function updateCrops(
-    delta
-){
-
-    for(
-        const spot of cropSpots
-    ){
-
-        if(!spot.planted)
-            continue;
-
-
-        spot.age+=delta;
-
-
-        if(
-            spot.age>30 &&
-            spot.crop
-        ){
-
-            spot.crop.scale.setScalar(
-                1.8
-            );
-        }
-
-
-        if(
-            spot.age>60
-        ){
-
-            const position =
-                new THREE.Vector3();
-
-
-            spot.mesh.getWorldPosition(
-                position
-            );
-
-
-            if(
-                player.position.distanceTo(
-                    position
-                )<5
-            ){
-
-                data.wheat++;
-
-
-                spot.mesh.parent.remove(
-                    spot.crop
-                );
-
-
-                spot.crop=null;
-                spot.planted=false;
-                spot.age=0;
-
-
-                showMessage(
-                    "🌾 收获小麦 +1"
-                );
+                showMessage("🌾 收割获得 2 小麦");
+                updateUI();
+                return;
             }
         }
     }
+
+    // 2. 检查最近的树木（如果靠得极近）
+    for(const tree of trees){
+
+        if(player.position.distanceTo(tree.position) < 5){
+
+            chopTree();
+            return;
+        }
+    }
+
+    // 3. 检查河边钓鱼
+    if(Math.abs(player.position.x + 85) <= 25){
+
+        fishing();
+        return;
+    }
+
+    // 4. 检查商店
+    if(player.position.distanceTo(new THREE.Vector3(25, 0, -30)) <= 14){
+
+        shop();
+        return;
+    }
+
+    showMessage("🔍 附近没有可互动的目标");
 }
 
 
 /* =========================================================
-   自动保存
+   昼夜与时间系统
 ========================================================= */
 
-let saveTimer=0;
+function updateTimeAndEnvironment(delta){
 
+    // 时间流逝 (1 秒实际时间 ≈ 0.05 小时游戏时间)
+    data.gameTime += delta * 0.05;
 
-function autoSave(
-    delta
-){
+    if(data.gameTime >= 24){
+        data.gameTime -= 24;
+        
+        // 新的一天恢复体力
+        data.stamina = Math.min(100, data.stamina + 40);
+        showMessage("🌅 新的一天开始了！体力恢复");
+    }
 
-    saveTimer+=delta;
+    // 太阳周期旋转
+    const angle = (data.gameTime / 24) * Math.PI * 2 - Math.PI / 2;
 
+    sun.position.x = Math.cos(angle) * 200;
+    sun.position.y = Math.sin(angle) * 200;
 
-    if(
-        saveTimer>10
-    ){
+    // 天空与日光渐变
+    if(data.gameTime > 6 && data.gameTime < 18){
 
-        saveTimer=0;
+        // 白天
+        sun.intensity = THREE.MathUtils.lerp(sun.intensity, 3, 0.02);
+        scene.background.setHex(0x91c9e5);
+        scene.fog.color.setHex(0x91c9e5);
 
-        data.x=
-            player.position.x;
+    }else if(data.gameTime >= 18 && data.gameTime <= 19){
 
-        data.z=
-            player.position.z;
+        // 黄昏
+        sun.intensity = THREE.MathUtils.lerp(sun.intensity, 1, 0.02);
+        scene.background.setHex(0xd67d53);
+        scene.fog.color.setHex(0xd67d53);
 
+    }else{
 
-        localStorage.setItem(
-            "ruralLife3D_save",
-            JSON.stringify(data)
-        );
+        // 夜晚
+        sun.intensity = THREE.MathUtils.lerp(sun.intensity, 0.1, 0.02);
+        scene.background.setHex(0x0c1322);
+        scene.fog.color.setHex(0x0c1322);
     }
 }
 
 
 /* =========================================================
-   游戏循环
+   窗口大小重置
+========================================================= */
+
+window.addEventListener("resize", ()=>{
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+
+/* =========================================================
+   主循环
 ========================================================= */
 
 function animate(){
 
-    requestAnimationFrame(
-        animate
-    );
+    requestAnimationFrame(animate);
 
-
-    const delta =
-        Math.min(
-            clock.getDelta(),
-            .05
-        );
-
+    const delta = clock.getDelta();
 
     updatePlayer(delta);
 
     updateCamera();
 
-    updateTime(delta);
-
-    updateWeather();
-
-    updateRain(delta);
-
     updateCrops(delta);
 
-    autoSave(delta);
+    updateTimeAndEnvironment(delta);
 
     updateUI();
 
-
-    renderer.render(
-        scene,
-        camera
-    );
+    renderer.render(scene, camera);
 }
-
-
-/* =========================================================
-   窗口调整
-========================================================= */
-
-window.addEventListener(
-    "resize",
-    ()=>{
-
-        camera.aspect=
-            innerWidth/
-            innerHeight;
-
-
-        camera.updateProjectionMatrix();
-
-
-        renderer.setSize(
-            innerWidth,
-            innerHeight
-        );
-    }
-);
-
-
-/* =========================================================
-   立即开始游戏
-========================================================= */
-
-loadGame();
-
-updateUI();
 
 animate();
 
-showMessage(
-    "🌾 欢迎来到乡村世界！"
-);
-
-
-/*
-   真实人物模型只在后台加载。
-   不会阻止游戏启动。
-*/
-
-setTimeout(
-    ()=>{
-        loadRealPlayerInBackground();
-    },
-    1000
-);
-
 </script>
-
 </body>
 </html>
-```
-
-
